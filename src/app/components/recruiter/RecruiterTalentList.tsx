@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
-import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { Filter, MapPin, Heart, Mail, Lock, Unlock } from 'lucide-react';
+import { Filter, Heart, Mail, Lock, Unlock, Shield } from 'lucide-react';
 
 const candidates = [
   {
@@ -14,9 +13,11 @@ const candidates = [
     location: 'Buenos Aires',
     matchScore: 94,
     skills: ['Java', 'Spring Boot', 'PostgreSQL'],
-    interested: true, // "Me interesa" = perfil desbloqueado
+    interested: true,
+    identityVerified: true,
     initials: 'SM',
-    color: 'from-[var(--sp-violet)] to-[var(--sp-violet-dark)]',
+    gradientFrom: 'var(--sp-violet)',
+    gradientTo: 'var(--sp-violet-dark)',
   },
   {
     id: 2,
@@ -26,9 +27,11 @@ const candidates = [
     matchScore: 87,
     skills: ['Java', 'AWS'],
     missing: ['Kafka'],
-    interested: true, // Julián también puso "Me interesa" = desbloqueado
+    interested: true,
+    identityVerified: false,
     initials: 'JL',
-    color: 'from-[var(--sp-amber)] to-amber-600',
+    gradientFrom: 'var(--sp-amber)',
+    gradientTo: '#d97706',
   },
   {
     id: 3,
@@ -38,9 +41,11 @@ const candidates = [
     matchScore: 76,
     skills: ['Java', 'PostgreSQL'],
     missing: ['AWS'],
-    interested: false, // No puso "Me interesa" = perfil bloqueado
+    interested: false,
+    identityVerified: false,
     initials: 'CR',
-    color: 'from-[var(--sp-alert-coral)] to-red-700',
+    gradientFrom: 'var(--sp-alert-coral)',
+    gradientTo: '#b91c1c',
   },
 ];
 
@@ -57,15 +62,15 @@ export default function RecruiterTalentList() {
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Talento Compatible</h1>
-            <p className="text-[var(--sp-gray-medium)]">Senior Backend Engineer</p>
+            <h1 className="text-2xl font-semibold mb-1">Talento Compatible</h1>
+            <p className="text-sm text-[var(--sp-gray-medium)]">Senior Backend Engineer</p>
           </div>
 
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-5">
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl hover:bg-gray-50 transition-all">
+              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm hover:bg-gray-50 transition-all">
                 <Filter className="w-4 h-4" />
                 Filtros
               </button>
@@ -76,7 +81,7 @@ export default function RecruiterTalentList() {
                   onChange={(e) => setShowInterestedOnly(e.target.checked)}
                   className="w-4 h-4 accent-[var(--sp-violet)]"
                 />
-                <span className="text-sm">Solo candidatos que marcaron "Me interesa"</span>
+                <span className="text-sm">Solo candidatos que marcaron interés</span>
               </label>
             </div>
             <p className="text-sm text-[var(--sp-gray-medium)]">
@@ -84,67 +89,79 @@ export default function RecruiterTalentList() {
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredCandidates.map((candidate) => (
-              <Card
+              <div
                 key={candidate.id}
-                hover
                 onClick={() => navigate(`/recruiter/talent/${candidate.id}`)}
-                className={candidate.interested ? 'border-2 border-green-300 bg-gradient-to-r from-green-50/50 to-white' : ''}
+                className="bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer hover:shadow-sm hover:border-gray-200 transition-all"
+                style={
+                  candidate.interested
+                    ? { borderColor: '#C5DFA8', backgroundColor: '#FAFFF7' }
+                    : {}
+                }
               >
-                <div className="flex items-center gap-6">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${candidate.color} rounded-xl flex items-center justify-center text-white font-bold text-xl relative`}>
+                <div className="flex items-center gap-5">
+                  <div
+                    className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg relative flex-shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${candidate.gradientFrom}, ${candidate.gradientTo})`,
+                    }}
+                  >
                     {candidate.initials}
                     {candidate.interested && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                         <Unlock className="w-3 h-3 text-white" />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold">{candidate.name}</h3>
-                      {candidate.interested && (
-                        <>
-                          <Badge variant="match" size="sm" className="flex items-center gap-1">
-                            <Heart className="w-3 h-3 fill-current" />
-                            Me interesa
-                          </Badge>
-                          <Badge variant="match" size="sm" className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            Perfil desbloqueado
-                          </Badge>
-                        </>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <h3 className="font-semibold">{candidate.name}</h3>
+                      {candidate.identityVerified && (
+                        <span
+                          className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: '#EAF3DE', color: '#27500A' }}
+                        >
+                          <Shield className="w-3 h-3" />
+                          Verificado
+                        </span>
                       )}
-                      {!candidate.interested && (
+                      {candidate.interested ? (
+                        <Badge variant="match" size="sm" className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 fill-current" />
+                          Me interesa
+                        </Badge>
+                      ) : (
                         <Badge variant="neutral" size="sm" className="flex items-center gap-1">
                           <Lock className="w-3 h-3" />
                           Perfil bloqueado
                         </Badge>
                       )}
                     </div>
-                    <p className="text-[var(--sp-gray-medium)]">{candidate.role} · {candidate.location}</p>
+                    <p className="text-sm text-[var(--sp-gray-medium)]">
+                      {candidate.role} · {candidate.location}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="flex gap-2 flex-wrap max-w-xs">
+                  <div className="flex items-center gap-5">
+                    <div className="flex gap-1.5 flex-wrap max-w-xs">
                       {candidate.skills.map((skill) => (
                         <Badge key={skill} variant="validated" size="sm">
                           {skill}
                         </Badge>
                       ))}
-                      {candidate.missing && candidate.missing.map((skill) => (
+                      {candidate.missing?.map((skill) => (
                         <Badge key={skill} variant="alert" size="sm">
                           Falta: {skill}
                         </Badge>
                       ))}
                     </div>
-
                     <MatchScore score={candidate.matchScore} size="md" />
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

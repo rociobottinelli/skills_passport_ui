@@ -1,39 +1,164 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
-import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { MapPin, Briefcase, Award, Mail, ExternalLink } from 'lucide-react';
+import SkillLevelRow from '../shared/SkillLevelRow';
+import ValidatorModal, { ValidatorData } from '../shared/ValidatorModal';
+import { Briefcase, Shield, Mail, ChevronRight } from 'lucide-react';
+
+const techSkills = [
+  {
+    name: 'Java',
+    level: 'Referente' as const,
+    type: 'tech' as const,
+    quote: 'Define la arquitectura Java del equipo y mentorea a los devs nuevos.',
+    quotedBy: 'Martín R., Mercado Libre',
+  },
+  {
+    name: 'Spring Boot',
+    level: 'Líder' as const,
+    type: 'tech' as const,
+    quote: 'Lideró la migración de servicios críticos a Spring Boot.',
+    quotedBy: 'Valentina C., Despegar',
+  },
+  {
+    name: 'PostgreSQL',
+    level: 'Ejecutor autónomo' as const,
+    type: 'tech' as const,
+    quote: 'Diseñó y optimizó esquemas de datos sin supervisión.',
+    quotedBy: 'Diego G., Globant',
+  },
+];
+
+const softSkills = [
+  {
+    name: 'Liderazgo técnico',
+    level: 'Líder' as const,
+    type: 'soft' as const,
+    quote: 'Lideró un equipo de 4 devs en el rediseño del módulo de pagos.',
+    quotedBy: 'Diego G., Globant',
+  },
+  {
+    name: 'Comunicación',
+    level: 'Referente' as const,
+    type: 'soft' as const,
+    quote: 'Explica temas complejos con claridad; da charlas internas al equipo.',
+    quotedBy: 'Martín R., Mercado Libre',
+  },
+];
+
+const validators: (ValidatorData & { validatedSkill: string; validatedLevel: string })[] = [
+  {
+    name: 'Martín Ramírez',
+    initials: 'MR',
+    role: 'Tech Lead',
+    company: 'Mercado Libre',
+    reputation: 'Oro',
+    years: 2,
+    validations: 52,
+    successRate: 87,
+    seniority: 'Tech Lead',
+    companyPartner: true,
+    identityVerified: true,
+    gradientFrom: '#185FA5',
+    gradientTo: '#0C447C',
+    validatedSkill: 'Java',
+    validatedLevel: 'Referente',
+  },
+  {
+    name: 'Valentina Cruz',
+    initials: 'VC',
+    role: 'Senior Developer',
+    company: 'Despegar',
+    reputation: 'Plata',
+    years: 1,
+    validations: 28,
+    successRate: 74,
+    seniority: 'Senior Developer',
+    companyPartner: true,
+    identityVerified: true,
+    gradientFrom: '#0d9488',
+    gradientTo: '#0f766e',
+    validatedSkill: 'Spring Boot',
+    validatedLevel: 'Líder',
+  },
+  {
+    name: 'Diego Giménez',
+    initials: 'DG',
+    role: 'Engineering Manager',
+    company: 'Globant',
+    reputation: 'Platino',
+    years: 3,
+    validations: 89,
+    successRate: 91,
+    seniority: 'Engineering Manager',
+    companyPartner: true,
+    identityVerified: true,
+    gradientFrom: '#db2777',
+    gradientTo: '#9d174d',
+    validatedSkill: 'PostgreSQL',
+    validatedLevel: 'Ejecutor autónomo',
+  },
+];
+
+const experience = [
+  {
+    title: 'Senior Backend Engineer',
+    company: 'Mercado Libre',
+    period: '2021 - Presente',
+    description: 'Desarrollo de microservicios de pagos y gestión de transacciones.',
+  },
+  {
+    title: 'Backend Engineer',
+    company: 'Globant',
+    period: '2019 - 2021',
+    description: 'Desarrollo de APIs REST para clientes corporativos.',
+  },
+];
 
 export default function RecruiterTalentDetail() {
   const navigate = useNavigate();
+  const [selectedValidator, setSelectedValidator] = useState<ValidatorData | null>(null);
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <button
             onClick={() => navigate('/recruiter/talent')}
-            className="text-[var(--sp-violet)] hover:underline mb-6"
+            className="text-sm text-[var(--sp-violet)] hover:underline mb-6"
           >
             ← Volver a la lista
           </button>
 
-          <Card className="mb-6">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex gap-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-[var(--sp-violet)] to-[var(--sp-violet-dark)] rounded-2xl flex items-center justify-center text-white font-bold text-4xl">
+          {/* Profile header */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+            <div className="flex justify-between items-start mb-5">
+              <div className="flex gap-5">
+                <div className="w-20 h-20 bg-gradient-to-br from-[var(--sp-violet)] to-[var(--sp-violet-dark)] rounded-2xl flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
                   SM
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">Sofía Martínez</h1>
-                  <p className="text-xl text-[var(--sp-gray-medium)] mb-2">Senior Backend Engineer · Buenos Aires</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h1 className="text-2xl font-semibold">Sofía Martínez</h1>
+                    <span
+                      className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: '#EAF3DE', color: '#27500A' }}
+                    >
+                      <Shield className="w-3 h-3" />
+                      Identidad verificada
+                    </span>
+                  </div>
+                  <p className="text-[var(--sp-gray-medium)] mb-3">
+                    Senior Backend Engineer · Buenos Aires · 7 años de exp.
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
                     <Badge variant="validated">✓ 8 habilidades validadas</Badge>
-                    <Badge variant="neutral">💼 7 años de experiencia</Badge>
+                    <Badge variant="neutral">💼 7 años</Badge>
                   </div>
                 </div>
               </div>
@@ -43,207 +168,146 @@ export default function RecruiterTalentDetail() {
             <div className="flex gap-3">
               <Button onClick={() => navigate('/recruiter/anonymous-inbox')}>
                 <div className="flex items-center justify-center gap-2">
-                  <Mail className="w-5 h-5" />
+                  <Mail className="w-4 h-4" />
                   <span>Contactar</span>
                 </div>
               </Button>
               <Button variant="secondary">Ver CV</Button>
             </div>
-          </Card>
+          </div>
 
-          <Card className="mb-6 border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                <Mail className="w-5 h-5 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold">Datos de contacto</h3>
-              <Badge variant="match" size="sm">Perfil revelado</Badge>
+          {/* Contact info */}
+          <div
+            className="rounded-2xl p-6 mb-4"
+            style={{ backgroundColor: '#EAF3DE', border: '1px solid #C5DFA8' }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-medium text-sm" style={{ color: '#27500A' }}>
+                Datos de contacto — Perfil revelado
+              </h3>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-white rounded-xl">
-                <p className="text-sm text-[var(--sp-gray-medium)] mb-1">Email</p>
-                <p className="font-medium">sofia.martinez@gmail.com</p>
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">Email</p>
+                <p className="text-sm font-medium">sofia.martinez@gmail.com</p>
               </div>
-              <div className="p-4 bg-white rounded-xl">
-                <p className="text-sm text-[var(--sp-gray-medium)] mb-1">Teléfono</p>
-                <p className="font-medium">+54 11 5555-0123</p>
+              <div>
+                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">Teléfono</p>
+                <p className="text-sm font-medium">+54 11 5555-0123</p>
               </div>
-              <div className="p-4 bg-white rounded-xl">
-                <p className="text-sm text-[var(--sp-gray-medium)] mb-1">LinkedIn</p>
-                <a href="#" className="font-medium text-[var(--sp-violet)] hover:underline">
+              <div>
+                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">LinkedIn</p>
+                <a href="#" className="text-sm font-medium text-[var(--sp-violet)] hover:underline">
                   sofia-martinez
                 </a>
               </div>
             </div>
-          </Card>
-
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <Card padding={false} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Award className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--sp-gray-medium)]">Confianza</p>
-                  <p className="text-xl font-bold">9.2/10</p>
-                </div>
-              </div>
-            </Card>
-            <Card padding={false} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-[var(--sp-violet)]" />
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--sp-gray-medium)]">Experiencia</p>
-                  <p className="text-xl font-bold">7 años</p>
-                </div>
-              </div>
-            </Card>
-            <Card padding={false} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Award className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--sp-gray-medium)]">Validaciones</p>
-                  <p className="text-xl font-bold">12</p>
-                </div>
-              </div>
-            </Card>
           </div>
 
-          <Card className="mb-6">
-            <h3 className="text-xl font-bold mb-4">Habilidades validadas</h3>
-            <div className="space-y-3">
-              {[
-                { skill: 'Java', confidence: 9.1, validations: 4, bar: 91 },
-                { skill: 'Spring Boot', confidence: 8.6, validations: 3, bar: 86 },
-                { skill: 'PostgreSQL', confidence: 8.2, validations: 2, bar: 82 },
-              ].map((item) => (
-                <div key={item.skill} className="p-4 bg-[var(--sp-gray-light)] rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="validated">✓ {item.skill}</Badge>
-                      <span className="text-sm text-[var(--sp-gray-medium)]">
-                        {item.validations} validaciones
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-[var(--sp-match-green)]">{item.confidence}</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[var(--sp-match-green)]"
-                      style={{ width: `${item.bar}%` }}
-                    ></div>
-                  </div>
-                </div>
+          {/* Skills */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+            <h3 className="font-semibold mb-3">Habilidades validadas</h3>
+
+            {/* Scale legend */}
+            <p className="text-xs text-[var(--sp-gray-medium)] mb-5 leading-relaxed">
+              <span className="font-medium">Colaborador</span> · trabajó con esto
+              &nbsp;|&nbsp;
+              <span className="font-medium">Ejecutor autónomo</span> · lo resolvió solo
+              &nbsp;|&nbsp;
+              <span className="font-medium">Líder</span> · lideró con esto
+              &nbsp;|&nbsp;
+              <span className="font-medium">Referente</span> · forma a otros
+            </p>
+
+            <p className="text-xs font-medium text-[var(--sp-gray-medium)] uppercase tracking-wide mb-1">
+              Técnicas
+            </p>
+            <div className="divide-y divide-gray-100">
+              {techSkills.map((s) => (
+                <SkillLevelRow key={s.name} {...s} />
               ))}
             </div>
-          </Card>
 
-          <Card className="mb-6 border-2 border-[var(--sp-violet)] bg-gradient-to-br from-white to-purple-50">
-            <div className="flex items-center gap-2 mb-6">
-              <Award className="w-6 h-6 text-[var(--sp-violet)]" />
-              <h3 className="text-2xl font-bold">🛡 Validado por su red</h3>
+            <div className="my-4 border-t border-gray-100" />
+
+            <p className="text-xs font-medium text-[var(--sp-gray-medium)] uppercase tracking-wide mb-1">
+              Habilidades blandas
+            </p>
+            <div className="divide-y divide-gray-100">
+              {softSkills.map((s) => (
+                <SkillLevelRow key={s.name} {...s} />
+              ))}
             </div>
-            <div className="grid gap-4">
-              {[
-                {
-                  name: 'Martín Ramírez',
-                  initials: 'MR',
-                  role: 'Tech Lead',
-                  company: 'Mercado Libre',
-                  relation: 'Líder de proyecto',
-                  skill: 'Java',
-                  score: 9.2,
-                  color: 'from-[var(--sp-blue-recruiter)] to-[var(--sp-blue-recruiter-text)]',
-                },
-                {
-                  name: 'Valentina Cruz',
-                  initials: 'VC',
-                  role: 'Senior Developer',
-                  company: 'Despegar',
-                  relation: 'Compañera de equipo',
-                  skill: 'Spring Boot',
-                  score: 8.7,
-                  color: 'from-teal-400 to-teal-700',
-                },
-                {
-                  name: 'Diego Giménez',
-                  initials: 'DG',
-                  role: 'Engineering Manager',
-                  company: 'Globant',
-                  relation: 'Manager directo',
-                  skill: 'PostgreSQL',
-                  score: 8.9,
-                  color: 'from-pink-400 to-pink-700',
-                },
-              ].map((validator) => (
-                <div
-                  key={validator.name}
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl border border-purple-200"
+          </div>
+
+          {/* Validators */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+            <h3 className="font-semibold mb-4">Validado por su red</h3>
+            <div className="divide-y divide-gray-100">
+              {validators.map((v) => (
+                <button
+                  key={v.name}
+                  onClick={() => setSelectedValidator(v)}
+                  className="w-full flex items-center gap-4 py-4 hover:bg-gray-50 transition-colors rounded-lg px-2 -mx-2 text-left"
                 >
-                  <div className={`w-14 h-14 bg-gradient-to-br ${validator.color} rounded-xl flex items-center justify-center text-white font-bold text-lg`}>
-                    {validator.initials}
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${v.gradientFrom}, ${v.gradientTo})`,
+                    }}
+                  >
+                    {v.initials}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold mb-1">{validator.name}</h4>
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-1">
-                      {validator.role} · {validator.company}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{v.name}</p>
+                    <p className="text-xs text-[var(--sp-gray-medium)]">
+                      {v.role} · {v.company}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="primary" size="sm">
-                        {validator.relation}
-                      </Badge>
-                      <span className="text-sm text-[var(--sp-gray-medium)]">validó</span>
-                      <Badge variant="validated" size="sm">
-                        {validator.skill}
-                      </Badge>
-                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-[var(--sp-match-green)]">{validator.score}</p>
-                    <p className="text-xs text-[var(--sp-gray-medium)]">/ 10</p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: '#EEEDFE', color: '#3C3489' }}
+                    >
+                      {v.validatedSkill} · {v.validatedLevel}
+                    </span>
+                    <span className="text-xs text-[var(--sp-gray-medium)]">{v.reputation}</span>
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
                   </div>
-                </div>
+                </button>
               ))}
             </div>
-          </Card>
+          </div>
 
-          <Card>
-            <h3 className="text-xl font-bold mb-4">Experiencia</h3>
-            <div className="space-y-6">
-              {[
-                {
-                  title: 'Senior Frontend Developer',
-                  company: 'Mercado Libre',
-                  period: '2021 - Presente',
-                  description: 'Desarrollo de features clave en el checkout flow.',
-                },
-                {
-                  title: 'Frontend Developer',
-                  company: 'Globant',
-                  period: '2019 - 2021',
-                  description: 'Desarrollo de aplicaciones web para clientes corporativos.',
-                },
-              ].map((exp) => (
-                <div key={exp.title} className="flex gap-4">
-                  <div className="w-12 h-12 bg-[var(--sp-gray-light)] rounded-xl flex items-center justify-center">
-                    <Briefcase className="w-6 h-6 text-[var(--sp-gray-medium)]" />
+          {/* Experience */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h3 className="font-semibold mb-4">Experiencia</h3>
+            <div className="divide-y divide-gray-100">
+              {experience.map((exp, i) => (
+                <div key={exp.title} className={`flex gap-4 ${i > 0 ? 'pt-4' : ''} ${i < experience.length - 1 ? 'pb-4' : ''}`}>
+                  <div className="w-9 h-9 bg-[var(--sp-gray-light)] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-4 h-4 text-[var(--sp-gray-medium)]" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold mb-1">{exp.title}</h4>
-                    <p className="text-[var(--sp-gray-medium)] mb-1">{exp.company}</p>
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-2">{exp.period}</p>
-                    <p className="text-sm">{exp.description}</p>
+                  <div>
+                    <h4 className="text-sm font-medium mb-0.5">{exp.title}</h4>
+                    <p className="text-xs text-[var(--sp-gray-medium)]">
+                      {exp.company} · {exp.period}
+                    </p>
+                    <p className="text-sm text-[var(--sp-gray-medium)] mt-1">{exp.description}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
         </div>
       </div>
+
+      {selectedValidator && (
+        <ValidatorModal
+          validator={selectedValidator}
+          onClose={() => setSelectedValidator(null)}
+        />
+      )}
     </div>
   );
 }

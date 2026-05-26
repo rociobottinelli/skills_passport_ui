@@ -2,57 +2,344 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
-import SkillLevelRow from '../shared/SkillLevelRow';
+import ProfileSkillRow from '../shared/ProfileSkillRow';
+import SkillDetailModal, { ValidationDetail } from '../shared/SkillDetailModal';
 import ValidatorModal, { ValidatorData } from '../shared/ValidatorModal';
 import { Award, Shield, Briefcase, ChevronRight } from 'lucide-react';
+import type { SkillLevel } from '../shared/SkillLevelRow';
 
-const techSkills = [
+// ── Skill data with full validation breakdowns ──────────────────────────────
+
+interface SkillEntry {
+  name: string;
+  level: SkillLevel;
+  type: 'tech' | 'soft';
+  score: number;
+  validationCount: number;
+  quote: string;
+  quotedBy: string;
+  validations: ValidationDetail[];
+}
+
+const javaValidations: ValidationDetail[] = [
+  {
+    name: 'Diego Giménez',
+    initials: 'DG',
+    role: 'Engineering Manager',
+    company: 'Globant',
+    reputation: 'Platino',
+    identityVerified: true,
+    gradientFrom: '#db2777',
+    gradientTo: '#9d174d',
+    assignedLevel: 'Referente',
+    repScore: 8.9,
+    expYears: 10,
+    expPts: 9,
+    histValidations: 41,
+    histPts: 9,
+    relationType: 'Manager directo',
+    relationPts: 9,
+    comment:
+      'Como su manager, vi a Sofía crecer hasta volverse la referente técnica del equipo. Lidera por conocimiento, no por cargo.',
+  },
+  {
+    name: 'Martín Ramírez',
+    initials: 'MR',
+    role: 'Tech Lead',
+    company: 'Mercado Libre',
+    reputation: 'Oro',
+    identityVerified: true,
+    gradientFrom: '#185FA5',
+    gradientTo: '#0C447C',
+    assignedLevel: 'Referente',
+    repScore: 8.3,
+    expYears: 8,
+    expPts: 7,
+    histValidations: 52,
+    histPts: 10,
+    relationType: 'Líder de proyecto',
+    relationPts: 9,
+    comment:
+      'Define la arquitectura Java del equipo y mentorea a los devs nuevos. Es la persona a la que todos consultan cuando hay una decisión técnica difícil.',
+  },
+  {
+    name: 'Valentina Cruz',
+    initials: 'VC',
+    role: 'Senior Developer',
+    company: 'Despegar',
+    reputation: 'Plata',
+    identityVerified: true,
+    gradientFrom: '#0d9488',
+    gradientTo: '#0f766e',
+    assignedLevel: 'Líder',
+    repScore: 7.4,
+    expYears: 6,
+    expPts: 6,
+    histValidations: 28,
+    histPts: 8,
+    relationType: 'Compañera de equipo',
+    relationPts: 10,
+    comment:
+      'Trabajamos juntas dos años. Su código Java es de los más limpios que vi, siempre pensando en mantenibilidad.',
+  },
+  {
+    name: 'Lucas Fernández',
+    initials: 'LF',
+    role: 'Senior Developer',
+    company: 'Mercado Libre',
+    reputation: 'Plata',
+    identityVerified: true,
+    gradientFrom: '#7c3aed',
+    gradientTo: '#5b21b6',
+    assignedLevel: 'Líder',
+    repScore: 7.1,
+    expYears: 5,
+    expPts: 6,
+    histValidations: 19,
+    histPts: 7,
+    relationType: 'Compañero de equipo',
+    relationPts: 10,
+    comment:
+      'Pair-programeamos un montón. Explica las cosas de Java de una forma que cualquiera entiende.',
+  },
+];
+
+const springBootValidations: ValidationDetail[] = [
+  {
+    name: 'Valentina Cruz',
+    initials: 'VC',
+    role: 'Senior Developer',
+    company: 'Despegar',
+    reputation: 'Plata',
+    identityVerified: true,
+    gradientFrom: '#0d9488',
+    gradientTo: '#0f766e',
+    assignedLevel: 'Líder',
+    repScore: 7.4,
+    expYears: 6,
+    expPts: 6,
+    histValidations: 28,
+    histPts: 8,
+    relationType: 'Compañera de equipo',
+    relationPts: 10,
+    comment:
+      'Lideró la migración de servicios críticos a Spring Boot. Definió los patrones que usa todo el equipo.',
+  },
+  {
+    name: 'Martín Ramírez',
+    initials: 'MR',
+    role: 'Tech Lead',
+    company: 'Mercado Libre',
+    reputation: 'Oro',
+    identityVerified: true,
+    gradientFrom: '#185FA5',
+    gradientTo: '#0C447C',
+    assignedLevel: 'Líder',
+    repScore: 8.3,
+    expYears: 8,
+    expPts: 7,
+    histValidations: 52,
+    histPts: 10,
+    relationType: 'Líder de proyecto',
+    relationPts: 9,
+    comment:
+      'Coordinó la migración completa del módulo de pagos sin cortes de servicio. Muy sólida en Spring Boot.',
+  },
+  {
+    name: 'Diego Giménez',
+    initials: 'DG',
+    role: 'Engineering Manager',
+    company: 'Globant',
+    reputation: 'Platino',
+    identityVerified: true,
+    gradientFrom: '#db2777',
+    gradientTo: '#9d174d',
+    assignedLevel: 'Ejecutor autónomo',
+    repScore: 8.9,
+    expYears: 10,
+    expPts: 9,
+    histValidations: 41,
+    histPts: 9,
+    relationType: 'Manager directo',
+    relationPts: 9,
+    comment:
+      'Spring Boot lo maneja sin necesidad de guía. Resuelve problemas complejos de forma independiente.',
+  },
+];
+
+const postgresValidations: ValidationDetail[] = [
+  {
+    name: 'Diego Giménez',
+    initials: 'DG',
+    role: 'Engineering Manager',
+    company: 'Globant',
+    reputation: 'Platino',
+    identityVerified: true,
+    gradientFrom: '#db2777',
+    gradientTo: '#9d174d',
+    assignedLevel: 'Ejecutor autónomo',
+    repScore: 8.9,
+    expYears: 10,
+    expPts: 9,
+    histValidations: 41,
+    histPts: 9,
+    relationType: 'Manager directo',
+    relationPts: 9,
+    comment:
+      'Diseñó y optimizó esquemas de datos sin supervisión. Los índices que propuso redujeron la latencia un 40%.',
+  },
+  {
+    name: 'Valentina Cruz',
+    initials: 'VC',
+    role: 'Senior Developer',
+    company: 'Despegar',
+    reputation: 'Plata',
+    identityVerified: true,
+    gradientFrom: '#0d9488',
+    gradientTo: '#0f766e',
+    assignedLevel: 'Ejecutor autónomo',
+    repScore: 7.4,
+    expYears: 6,
+    expPts: 6,
+    histValidations: 28,
+    histPts: 8,
+    relationType: 'Compañera de equipo',
+    relationPts: 10,
+    comment:
+      'Sabe modelar datos para escala. Varias veces encontró cuellos de botella que nadie más detectó.',
+  },
+];
+
+const techSkills: SkillEntry[] = [
   {
     name: 'Java',
-    level: 'Referente' as const,
-    type: 'tech' as const,
+    level: 'Referente',
+    type: 'tech',
+    score: 9.1,
+    validationCount: 4,
     quote: 'Define la arquitectura Java del equipo y mentorea a los devs nuevos.',
     quotedBy: 'Martín R., Mercado Libre',
+    validations: javaValidations,
   },
   {
     name: 'Spring Boot',
-    level: 'Líder' as const,
-    type: 'tech' as const,
+    level: 'Líder',
+    type: 'tech',
+    score: 8.6,
+    validationCount: 3,
     quote: 'Lideró la migración de servicios críticos a Spring Boot.',
     quotedBy: 'Valentina C., Despegar',
+    validations: springBootValidations,
   },
   {
     name: 'PostgreSQL',
-    level: 'Ejecutor autónomo' as const,
-    type: 'tech' as const,
+    level: 'Ejecutor autónomo',
+    type: 'tech',
+    score: 8.2,
+    validationCount: 2,
     quote: 'Diseñó y optimizó esquemas de datos sin supervisión.',
     quotedBy: 'Diego G., Globant',
+    validations: postgresValidations,
   },
 ];
 
-const softSkills = [
+const softSkills: SkillEntry[] = [
   {
     name: 'Liderazgo técnico',
-    level: 'Líder' as const,
-    type: 'soft' as const,
+    level: 'Líder',
+    type: 'soft',
+    score: 8.1,
+    validationCount: 1,
     quote: 'Lideró un equipo de 4 devs en el rediseño del módulo de pagos.',
     quotedBy: 'Diego G., Globant',
+    validations: [
+      {
+        name: 'Diego Giménez',
+        initials: 'DG',
+        role: 'Engineering Manager',
+        company: 'Globant',
+        reputation: 'Platino',
+        identityVerified: true,
+        gradientFrom: '#db2777',
+        gradientTo: '#9d174d',
+        assignedLevel: 'Líder',
+        repScore: 8.9,
+        expYears: 10,
+        expPts: 9,
+        histValidations: 41,
+        histPts: 9,
+        relationType: 'Manager directo',
+        relationPts: 9,
+        comment:
+          'Lideró un equipo de 4 devs en el rediseño del módulo de pagos. Tomó decisiones técnicas de arquitectura que el equipo adoptó como estándar.',
+      },
+    ],
   },
   {
     name: 'Comunicación',
-    level: 'Referente' as const,
-    type: 'soft' as const,
+    level: 'Referente',
+    type: 'soft',
+    score: 9.0,
+    validationCount: 1,
     quote: 'Explica temas complejos con claridad; da charlas internas al equipo.',
     quotedBy: 'Martín R., Mercado Libre',
+    validations: [
+      {
+        name: 'Martín Ramírez',
+        initials: 'MR',
+        role: 'Tech Lead',
+        company: 'Mercado Libre',
+        reputation: 'Oro',
+        identityVerified: true,
+        gradientFrom: '#185FA5',
+        gradientTo: '#0C447C',
+        assignedLevel: 'Referente',
+        repScore: 8.3,
+        expYears: 8,
+        expPts: 7,
+        histValidations: 52,
+        histPts: 10,
+        relationType: 'Líder de proyecto',
+        relationPts: 9,
+        comment:
+          'Explica temas complejos con una claridad excepcional. Da charlas técnicas internas que el equipo pide repetir.',
+      },
+    ],
   },
   {
     name: 'Resolución de conflictos',
-    level: 'Ejecutor autónomo' as const,
-    type: 'soft' as const,
+    level: 'Ejecutor autónomo',
+    type: 'soft',
+    score: 7.6,
+    validationCount: 1,
     quote: 'Medió desacuerdos técnicos en el equipo sin escalar al manager.',
     quotedBy: 'Valentina C., Despegar',
+    validations: [
+      {
+        name: 'Valentina Cruz',
+        initials: 'VC',
+        role: 'Senior Developer',
+        company: 'Despegar',
+        reputation: 'Plata',
+        identityVerified: true,
+        gradientFrom: '#0d9488',
+        gradientTo: '#0f766e',
+        assignedLevel: 'Ejecutor autónomo',
+        repScore: 7.4,
+        expYears: 6,
+        expPts: 6,
+        histValidations: 28,
+        histPts: 8,
+        relationType: 'Compañera de equipo',
+        relationPts: 10,
+        comment:
+          'Medió desacuerdos técnicos de forma autónoma. No escala innecesariamente, busca el consenso antes de involucrar al management.',
+      },
+    ],
   },
 ];
+
+// ── Validators for the "Mis validadores" section ─────────────────────────────
 
 const validators: (ValidatorData & { validatedSkill: string; validatedLevel: string })[] = [
   {
@@ -129,8 +416,11 @@ const experience = [
   },
 ];
 
+// ── Component ────────────────────────────────────────────────────────────────
+
 export default function CandidateProfile() {
   const navigate = useNavigate();
+  const [selectedSkill, setSelectedSkill] = useState<SkillEntry | null>(null);
   const [selectedValidator, setSelectedValidator] = useState<ValidatorData | null>(null);
 
   return (
@@ -202,7 +492,17 @@ export default function CandidateProfile() {
             </p>
             <div className="divide-y divide-gray-100">
               {techSkills.map((s) => (
-                <SkillLevelRow key={s.name} {...s} />
+                <ProfileSkillRow
+                  key={s.name}
+                  name={s.name}
+                  level={s.level}
+                  type={s.type}
+                  score={s.score}
+                  validationCount={s.validationCount}
+                  quote={s.quote}
+                  quotedBy={s.quotedBy}
+                  onDetail={() => setSelectedSkill(s)}
+                />
               ))}
             </div>
 
@@ -213,7 +513,17 @@ export default function CandidateProfile() {
             </p>
             <div className="divide-y divide-gray-100">
               {softSkills.map((s) => (
-                <SkillLevelRow key={s.name} {...s} />
+                <ProfileSkillRow
+                  key={s.name}
+                  name={s.name}
+                  level={s.level}
+                  type={s.type}
+                  score={s.score}
+                  validationCount={s.validationCount}
+                  quote={s.quote}
+                  quotedBy={s.quotedBy}
+                  onDetail={() => setSelectedSkill(s)}
+                />
               ))}
             </div>
           </div>
@@ -259,9 +569,9 @@ export default function CandidateProfile() {
           {/* Experience */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
             <h3 className="font-semibold mb-4">Experiencia</h3>
-            <div className="space-y-5 divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100">
               {experience.map((exp, i) => (
-                <div key={exp.title} className={`flex gap-4 ${i > 0 ? 'pt-5' : ''}`}>
+                <div key={exp.title} className={`flex gap-4 ${i > 0 ? 'pt-4' : ''} ${i < experience.length - 1 ? 'pb-4' : ''}`}>
                   <div className="w-9 h-9 bg-[var(--sp-gray-light)] rounded-xl flex items-center justify-center flex-shrink-0">
                     <Briefcase className="w-4 h-4 text-[var(--sp-gray-medium)]" />
                   </div>
@@ -303,6 +613,19 @@ export default function CandidateProfile() {
         </div>
       </div>
 
+      {/* Skill detail modal */}
+      {selectedSkill && (
+        <SkillDetailModal
+          skillName={selectedSkill.name}
+          score={selectedSkill.score}
+          consolidatedLevel={selectedSkill.level}
+          type={selectedSkill.type}
+          validations={selectedSkill.validations}
+          onClose={() => setSelectedSkill(null)}
+        />
+      )}
+
+      {/* Validator profile modal */}
       {selectedValidator && (
         <ValidatorModal
           validator={selectedValidator}

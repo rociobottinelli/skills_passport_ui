@@ -2,14 +2,27 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function RecruiterLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/recruiter/dashboard');
+    setError('');
+    setLoading(true);
+    try {
+      await login(formData.email, formData.password);
+      navigate('/recruiter/dashboard');
+    } catch {
+      setError('Email o contraseña incorrectos');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,8 +61,12 @@ export default function RecruiterLogin() {
               </button>
             </div>
 
-            <Button type="submit" fullWidth className="mt-6">
-              Iniciar sesión
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
+            <Button type="submit" fullWidth className="mt-6" disabled={loading}>
+              {loading ? 'Ingresando...' : 'Iniciar sesión'}
             </Button>
           </form>
 

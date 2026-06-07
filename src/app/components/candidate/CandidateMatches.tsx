@@ -1,73 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
 import { MapPin, Briefcase, Filter } from 'lucide-react';
+import * as matchesApi from '../../../api/matches';
+import type { CandidateMatchResponse } from '../../../types';
 
-const offers = [
-  {
-    id: 1,
-    company: 'Lexus',
-    logo: 'LX',
-    logoColor: 'from-slate-100 to-slate-200',
-    logoText: 'text-slate-700',
-    title: 'Senior Backend Engineer',
-    matchScore: 94,
-    location: 'Argentina',
-    modality: 'Remoto',
-    seniority: 'Senior',
-    skills: ['Java', 'Spring Boot', 'Kafka'],
-    salary: 'USD 4.500 - 6.000',
-  },
-  {
-    id: 2,
-    company: 'Globant',
-    logo: 'GL',
-    logoColor: 'from-[var(--sp-amber-bg)] to-amber-100',
-    logoText: 'text-[var(--sp-amber)]',
-    title: 'Backend Tech Lead',
-    matchScore: 87,
-    location: 'Argentina',
-    modality: 'Híbrido',
-    seniority: 'Lead',
-    skills: ['Java', 'AWS', 'PostgreSQL'],
-    salary: 'USD 5.000 - 7.000',
-  },
-  {
-    id: 3,
-    company: 'Despegar',
-    logo: 'DP',
-    logoColor: 'from-pink-100 to-pink-200',
-    logoText: 'text-pink-600',
-    title: 'Senior Software Engineer',
-    matchScore: 81,
-    location: 'Argentina',
-    modality: 'Remoto',
-    seniority: 'Senior',
-    skills: ['Java', 'Spring Boot', 'Docker'],
-    salary: 'USD 4.000 - 5.500',
-  },
-  {
-    id: 4,
-    company: 'Rappi',
-    logo: 'RP',
-    logoColor: 'from-green-100 to-green-200',
-    logoText: 'text-green-600',
-    title: 'Backend Engineer',
-    matchScore: 68,
-    location: 'Argentina',
-    modality: 'Remoto',
-    seniority: 'Semi-senior',
-    skills: ['Java', 'PostgreSQL'],
-    salary: 'USD 3.000 - 4.500',
-  },
+const LOGO_STYLES = [
+  { color: 'from-slate-100 to-slate-200', text: 'text-slate-700' },
+  { color: 'from-amber-100 to-amber-200', text: 'text-amber-700' },
+  { color: 'from-pink-100 to-pink-200', text: 'text-pink-600' },
+  { color: 'from-green-100 to-green-200', text: 'text-green-600' },
+  { color: 'from-blue-100 to-blue-200', text: 'text-blue-600' },
 ];
 
 export default function CandidateMatches() {
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
+  const [matches, setMatches] = useState<CandidateMatchResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    matchesApi.getCandidateMatches()
+      .then(setMatches)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const offers = matches.map((m, i) => ({
+    id: m.offerId,
+    company: m.companyName,
+    logo: m.companyName.slice(0, 2).toUpperCase(),
+    logoColor: LOGO_STYLES[i % LOGO_STYLES.length].color,
+    logoText: LOGO_STYLES[i % LOGO_STYLES.length].text,
+    title: m.offerTitle,
+    matchScore: m.matchScore,
+    status: m.status,
+  }));
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
@@ -127,39 +98,37 @@ export default function CandidateMatches() {
             </Card>
           )}
 
-          <div className="space-y-4">
-            {offers.map((offer) => (
-              <Card
-                key={offer.id}
-                hover
-                onClick={() => navigate(`/candidate/offer/${offer.id}`)}
-              >
-                <div className="flex gap-6">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${offer.logoColor} rounded-xl flex items-center justify-center ${offer.logoText} font-bold text-xl flex-shrink-0`}>
-                    {offer.logo}
-                  </div>
+          {loading ? (
+            <p className="text-center text-[var(--sp-gray-medium)] py-12">Cargando matches...</p>
+          ) : offers.length === 0 ? (
+            <p className="text-center text-[var(--sp-gray-medium)] py-12">No hay matches disponibles todavía.</p>
+          ) : (
+            <div className="space-y-4">
+              {offers.map((offer) => (
+                <Card
+                  key={offer.id}
+                  hover
+                  onClick={() => navigate(`/candidate/offer/${offer.id}`)}
+                >
+                  <div className="flex gap-6">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${offer.logoColor} rounded-xl flex items-center justify-center ${offer.logoText} font-bold text-xl flex-shrink-0`}>
+                      {offer.logo}
+                    </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-xl font-bold mb-1">{offer.title}</h3>
-                        <p className="text-[var(--sp-gray-medium)] mb-2">{offer.company} · {offer.modality} · {offer.seniority}</p>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">{offer.title}</h3>
+                          <p className="text-[var(--sp-gray-medium)] mb-2">{offer.company}</p>
+                        </div>
+                        <MatchScore score={offer.matchScore} size="md" />
                       </div>
-                      <MatchScore score={offer.matchScore} size="md" />
-                    </div>
-
-                    <div className="flex gap-2 mb-3">
-                      {offer.skills.map((skill) => (
-                        <Badge key={skill} variant="primary" size="sm">
-                          {skill}
-                        </Badge>
-                      ))}
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

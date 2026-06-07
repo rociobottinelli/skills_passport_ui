@@ -1,47 +1,38 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import { MessageSquare, CheckCircle } from 'lucide-react';
+import * as messagesApi from '../../../api/messages';
+import type { AnonymousThreadResponse } from '../../../types';
 
-const threads = [
-  {
-    id: 1,
-    company: 'Lexus',
-    position: 'Senior Backend Engineer',
-    category: 'Sueldo',
-    hasResponse: true,
-    date: 'Hace 1 día',
-    logo: 'LX',
-    logoColor: 'from-slate-100 to-slate-200',
-    logoText: 'text-slate-700',
-  },
-  {
-    id: 2,
-    company: 'Globant',
-    position: 'Backend Tech Lead',
-    category: 'Cultura',
-    hasResponse: true,
-    date: 'Hace 3 días',
-    logo: 'GL',
-    logoColor: 'from-[var(--sp-amber-bg)] to-amber-100',
-    logoText: 'text-[var(--sp-amber)]',
-  },
-  {
-    id: 3,
-    company: 'Despegar',
-    position: 'Senior Software Engineer',
-    category: 'Stack',
-    hasResponse: false,
-    date: 'Hace 5 días',
-    logo: 'DP',
-    logoColor: 'from-pink-100 to-pink-200',
-    logoText: 'text-pink-600',
-  },
+const CATEGORY_LABELS: Record<string, string> = {
+  SALARY: 'Sueldo',
+  CULTURE: 'Cultura',
+  STACK: 'Stack',
+  BENEFITS: 'Beneficios',
+  MODALITY: 'Modalidad',
+  OTHER: 'Otro',
+};
+
+const THREAD_COLORS = [
+  { color: 'from-slate-100 to-slate-200', text: 'text-slate-700' },
+  { color: 'from-amber-100 to-amber-200', text: 'text-amber-700' },
+  { color: 'from-pink-100 to-pink-200', text: 'text-pink-600' },
 ];
 
 export default function CandidateAnonymousInbox() {
   const navigate = useNavigate();
+  const [threads, setThreads] = useState<AnonymousThreadResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    messagesApi.getCandidateThreads()
+      .then(setThreads)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
@@ -56,45 +47,53 @@ export default function CandidateAnonymousInbox() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {threads.map((thread) => (
-              <Card
-                key={thread.id}
-                hover
-                onClick={() => navigate(`/candidate/anonymous/${thread.id}`)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${thread.logoColor} rounded-xl flex items-center justify-center ${thread.logoText} font-bold text-lg`}>
-                      {thread.logo}
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-1">{thread.position}</h3>
-                      <p className="text-sm text-[var(--sp-gray-medium)] mb-2">{thread.company}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="primary" size="sm">
-                          {thread.category}
-                        </Badge>
-                        {thread.hasResponse && (
-                          <div className="flex items-center gap-1 text-green-600 text-sm">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Respondida</span>
+          {loading ? (
+            <p className="text-center text-[var(--sp-gray-medium)] py-12">Cargando mensajes...</p>
+          ) : (
+            <div className="space-y-4">
+              {threads.map((thread, i) => {
+                const style = THREAD_COLORS[i % THREAD_COLORS.length];
+                return (
+                  <Card
+                    key={thread.id}
+                    hover
+                    onClick={() => navigate(`/candidate/anonymous/${thread.id}`)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 bg-gradient-to-br ${style.color} rounded-xl flex items-center justify-center ${style.text} font-bold text-lg`}>
+                          <MessageSquare className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold mb-1">{thread.anonymousCode}</h3>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="primary" size="sm">
+                              {CATEGORY_LABELS[thread.category] || thread.category}
+                            </Badge>
+                            {thread.status === 'RESPONDED' && (
+                              <div className="flex items-center gap-1 text-green-600 text-sm">
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Respondida</span>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-[var(--sp-gray-medium)]">
+                          {new Date(thread.createdAt).toLocaleDateString('es-AR')}
+                        </span>
+                        <MessageSquare className="w-5 h-5 text-[var(--sp-gray-medium)]" />
                       </div>
                     </div>
-                  </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-[var(--sp-gray-medium)]">{thread.date}</span>
-                    <MessageSquare className="w-5 h-5 text-[var(--sp-gray-medium)]" />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {threads.length === 0 && (
+          {!loading && threads.length === 0 && (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-10 h-10 text-[var(--sp-gray-medium)]" />

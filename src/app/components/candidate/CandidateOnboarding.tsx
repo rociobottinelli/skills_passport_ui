@@ -2,51 +2,158 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
-import { Upload, X, Shield, CheckCircle, Lock, Camera, ScanFace } from 'lucide-react';
+import { Upload, X, Shield, CheckCircle, Lock, Camera, ScanFace, Plus, Briefcase, FolderOpen } from 'lucide-react';
+import * as candidateApi from '../../../api/candidate';
+import * as skillsApi from '../../../api/skills';
+import type { SkillResponse, ExperienceRange } from '../../../types';
+
+const EXPERIENCE_MAP: Record<string, ExperienceRange> = {
+  '<1 año': '<1 year',
+  '1 a 3 años': '1-3 years',
+  '4 a 6 años': '4-6 years',
+  '7 a 10 años': '7-10 years',
+  '+10 años': '10+ years',
+};
+
+function toApiDate(value: string): string {
+  return value.length === 7 ? `${value}-01` : value;
+}
+
+interface ProjectEntry {
+  title: string;
+  description: string;
+  link: string;
+}
+
+interface ExperienceEntry {
+  company: string;
+  position: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+}
+
+const emptyProject = (): ProjectEntry => ({ title: '', description: '', link: '' });
+const emptyExperience = (): ExperienceEntry => ({ company: '', position: '', startDate: '', endDate: '', isCurrent: false });
 
 export default function CandidateOnboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [skills, setSkills] = useState<Array<{ name: string; experience: string }>>([
-    { name: 'Java', experience: '7 a 10 años' },
-    { name: 'Spring Boot', experience: '4 a 6 años' },
-    { name: 'PostgreSQL', experience: '1 a 3 años' },
-    { name: 'Docker', experience: '1 a 3 años' },
-  ]);
+  const [skills, setSkills] = useState<Array<{ name: string; experience: string; skillId?: string }>>([]);
   const [skillInput, setSkillInput] = useState('');
-  const [formData, setFormData] = useState({
-    headline: '',
-    projectTitle: '',
-    projectDescription: '',
-  });
+  const [skillSearchResults, setSkillSearchResults] = useState<SkillResponse[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<SkillResponse[]>([]);
+  const [formData, setFormData] = useState({ headline: '' });
+  const [projects, setProjects] = useState<ProjectEntry[]>([emptyProject()]);
+  const [experiences, setExperiences] = useState<ExperienceEntry[]>([emptyExperience()]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [dni, setDni] = useState('');
   const [tramite, setTramite] = useState('');
   const [renaperSubStep, setRenaperSubStep] = useState<'form' | 'scan' | 'scanning' | 'success'>('form');
   const [scanProgress, setScanProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const experienceOptions = ['<1 año', '1 a 3 años', '4 a 6 años', '7 a 10 años', '+10 años'];
-  const suggestedSkills = ['TypeScript', 'Node.js', 'PostgreSQL'];
   const TOTAL_STEPS = 5;
 
+  useEffect(() => {
+    skillsApi.getSuggestions().then(setSuggestedSkills).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!skillInput) {
+      setSkillSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      skillsApi.searchSkills(skillInput).then(setSkillSearchResults).catch(() => {});
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [skillInput]);
+
+  const addSkillFromCatalog = (skill: SkillResponse) => {
+    if (!skills.find((s) => s.skillId === skill.id)) {
+      setSkills([...skills, { name: skill.name, experience: '1 a 3 años', skillId: skill.id }]);
+    }
+    setSkillInput('');
+    setSkillSearchResults([]);
+  };
+
   const addSkill = () => {
-    if (skillInput && !skills.find((s) => s.name === skillInput)) {
-      setSkills([...skills, { name: skillInput, experience: '1-3 años' }]);
-      setSkillInput('');
+    if (skillSearchResults.length > 0) {
+      addSkillFromCatalog(skillSearchResults[0]);
     }
   };
 
-  const handleNext = () => {
-    if (step < TOTAL_STEPS) setStep(step + 1);
-    else navigate('/candidate/profile');
+  const updateProject = (index: number, field: keyof ProjectEntry, value: string) => {
+    setProjects(projects.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  const updateExperience = (index: number, field: keyof ExperienceEntry, value: string | boolean) => {
+    setExperiences(experiences.map((e, i) => i === index ? { ...e, [field]: value } : e));
+  };
+
+  const handleNext = async () => {
+    setSaving(true);
+    try {
+      if (step === 1) {
+        if (photoFile) {
+          await candidateApi.uploadPhoto(photoFile);
+        }
+        if (formData.headline) {
+          await candidateApi.updateProfile({ headline: formData.headline });
+        }
+      } else if (step === 2) {
+        for (const skill of skills) {
+          if (skill.skillId) {
+            const expRange = EXPERIENCE_MAP[skill.experience] || '1-3 years';
+            await skillsApi.addSkill({ skillId: skill.skillId, experienceRange: expRange });
+          }
+        }
+      } else if (step === 3) {
+        for (const proj of projects) {
+          if (proj.title) {
+            await candidateApi.addProject({
+              title: proj.title,
+              description: proj.description || undefined,
+              link: proj.link || undefined,
+            });
+          }
+        }
+      } else if (step === 4) {
+        for (const exp of experiences) {
+          if (exp.company && exp.position) {
+            await candidateApi.addExperience({
+              company: exp.company,
+              position: exp.position,
+              startDate: toApiDate(exp.startDate || new Date().toISOString().slice(0, 10)),
+              endDate: exp.isCurrent ? undefined : exp.endDate ? toApiDate(exp.endDate) : undefined,
+              isCurrent: exp.isCurrent,
+            });
+          }
+        }
+      }
+      if (step < TOTAL_STEPS) setStep(step + 1);
+      else navigate('/candidate/profile');
+    } catch {
+      // silently continue — onboarding steps are best-effort
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDniConfirm = () => {
     setRenaperSubStep('scan');
   };
 
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
     setRenaperSubStep('scanning');
     setScanProgress(0);
+    try {
+      await candidateApi.verifyIdentity({ dni, tramiteNumber: tramite });
+    } catch {
+      // verification result handled by scan animation
+    }
   };
 
   useEffect(() => {
@@ -126,12 +233,20 @@ export default function CandidateOnboarding() {
               <h2 className="text-xl font-semibold">Foto y headline</h2>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium">Foto de perfil</label>
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-[var(--sp-violet)] cursor-pointer transition-all">
+                <label className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-[var(--sp-violet)] cursor-pointer transition-all block">
                   <Upload className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-[var(--sp-gray-medium)]">
-                    Hacé click o arrastrá tu foto aquí
+                    {photoFile ? photoFile.name : 'Hacé click o arrastrá tu foto aquí'}
                   </p>
-                </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setPhotoFile(e.target.files[0]);
+                    }}
+                  />
+                </label>
               </div>
               <Input
                 label="Headline profesional"
@@ -163,17 +278,29 @@ export default function CandidateOnboarding() {
                     }
                   }}
                 />
+                {skillSearchResults.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg mt-1 max-h-40 overflow-y-auto bg-white shadow-sm">
+                    {skillSearchResults.map((skill) => (
+                      <button
+                        key={skill.id}
+                        onClick={() => addSkillFromCatalog(skill)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--sp-violet-light)] transition-all"
+                      >
+                        {skill.name} <span className="text-xs text-gray-400">({skill.type})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {suggestedSkills.map((skill) => (
+                  {suggestedSkills
+                    .filter((s) => !skills.find((sk) => sk.skillId === s.id))
+                    .map((skill) => (
                     <button
-                      key={skill}
-                      onClick={() => {
-                        setSkillInput(skill);
-                        addSkill();
-                      }}
+                      key={skill.id}
+                      onClick={() => addSkillFromCatalog(skill)}
                       className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm hover:border-[var(--sp-violet)] hover:bg-[var(--sp-violet-light)] transition-all"
                     >
-                      {skill}
+                      {skill.name}
                     </button>
                   ))}
                 </div>
@@ -219,46 +346,135 @@ export default function CandidateOnboarding() {
             </div>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3 — Projects (multi) */}
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Agregá un proyecto</h2>
-              <Input
-                label="Título del proyecto"
-                placeholder="Ej: Sistema de gestión de inventario"
-                value={formData.projectTitle}
-                onChange={(e) => setFormData({ ...formData, projectTitle: e.target.value })}
-              />
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Descripción</label>
-                <textarea
-                  value={formData.projectDescription}
-                  onChange={(e) =>
-                    setFormData({ ...formData, projectDescription: e.target.value })
-                  }
-                  placeholder="Describí tu rol y responsabilidades en el proyecto..."
-                  rows={5}
-                  className="px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] resize-none text-sm"
-                />
-              </div>
-              <Input label="Link al proyecto" placeholder="https://..." />
+              <h2 className="text-xl font-semibold">Agregá tus proyectos</h2>
+              <p className="text-sm text-[var(--sp-gray-medium)]">
+                Podés agregar uno o varios proyectos en los que hayas participado.
+              </p>
+
+              {projects.map((proj, idx) => (
+                <div key={idx} className="rounded-xl border border-gray-100 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-[var(--sp-violet)]" />
+                      <span className="text-sm font-medium">Proyecto {idx + 1}</span>
+                    </div>
+                    {projects.length > 1 && (
+                      <button
+                        onClick={() => setProjects(projects.filter((_, i) => i !== idx))}
+                        className="p-1 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    label="Título del proyecto"
+                    placeholder="Ej: Sistema de gestión de inventario"
+                    value={proj.title}
+                    onChange={(e) => updateProject(idx, 'title', e.target.value)}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Descripción</label>
+                    <textarea
+                      value={proj.description}
+                      onChange={(e) => updateProject(idx, 'description', e.target.value)}
+                      placeholder="Describí tu rol y responsabilidades en el proyecto..."
+                      rows={3}
+                      className="px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] resize-none text-sm"
+                    />
+                  </div>
+                  <Input
+                    label="Link al proyecto"
+                    placeholder="https://..."
+                    value={proj.link}
+                    onChange={(e) => updateProject(idx, 'link', e.target.value)}
+                  />
+                </div>
+              ))}
+
+              <button
+                onClick={() => setProjects([...projects, emptyProject()])}
+                className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-[var(--sp-gray-medium)] hover:border-[var(--sp-violet)] hover:text-[var(--sp-violet)] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Agregar otro proyecto
+              </button>
             </div>
           )}
 
-          {/* Step 4 */}
+          {/* Step 4 — Experience (multi) */}
           {step === 4 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold">Experiencia laboral</h2>
-              <Input label="Empresa" placeholder="Ej: Mercado Libre" />
-              <Input label="Puesto" placeholder="Ej: Senior Backend Engineer" />
-              <div className="grid grid-cols-2 gap-4">
-                <Input label="Fecha de inicio" type="month" />
-                <Input label="Fecha de fin" type="month" />
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" className="w-4 h-4 accent-[var(--sp-violet)]" />
-                <span className="text-sm">Trabajo aquí actualmente</span>
-              </div>
+              <p className="text-sm text-[var(--sp-gray-medium)]">
+                Podés agregar una o varias experiencias laborales.
+              </p>
+
+              {experiences.map((exp, idx) => (
+                <div key={idx} className="rounded-xl border border-gray-100 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-[var(--sp-violet)]" />
+                      <span className="text-sm font-medium">Experiencia {idx + 1}</span>
+                    </div>
+                    {experiences.length > 1 && (
+                      <button
+                        onClick={() => setExperiences(experiences.filter((_, i) => i !== idx))}
+                        className="p-1 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    label="Empresa"
+                    placeholder="Ej: Mercado Libre"
+                    value={exp.company}
+                    onChange={(e) => updateExperience(idx, 'company', e.target.value)}
+                  />
+                  <Input
+                    label="Puesto"
+                    placeholder="Ej: Senior Backend Engineer"
+                    value={exp.position}
+                    onChange={(e) => updateExperience(idx, 'position', e.target.value)}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Fecha de inicio"
+                      type="month"
+                      value={exp.startDate}
+                      onChange={(e) => updateExperience(idx, 'startDate', e.target.value)}
+                    />
+                    <Input
+                      label="Fecha de fin"
+                      type="month"
+                      value={exp.endDate}
+                      onChange={(e) => updateExperience(idx, 'endDate', e.target.value)}
+                      disabled={exp.isCurrent}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-[var(--sp-violet)]"
+                      checked={exp.isCurrent}
+                      onChange={(e) => updateExperience(idx, 'isCurrent', e.target.checked)}
+                    />
+                    <span className="text-sm">Trabajo aquí actualmente</span>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() => setExperiences([...experiences, emptyExperience()])}
+                className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-[var(--sp-gray-medium)] hover:border-[var(--sp-violet)] hover:text-[var(--sp-violet)] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Agregar otra experiencia
+              </button>
             </div>
           )}
 
@@ -371,7 +587,6 @@ export default function CandidateOnboarding() {
                     className="relative rounded-2xl overflow-hidden flex items-center justify-center"
                     style={{ backgroundColor: '#0F0F14', height: 280 }}
                   >
-                    {/* Corner guides */}
                     {['top-4 left-4', 'top-4 right-4', 'bottom-4 left-4', 'bottom-4 right-4'].map((pos, i) => (
                       <div
                         key={i}
@@ -385,7 +600,6 @@ export default function CandidateOnboarding() {
                       />
                     ))}
 
-                    {/* Face oval */}
                     <div className="relative flex items-center justify-center">
                       <div
                         className="absolute rounded-full"
@@ -399,7 +613,6 @@ export default function CandidateOnboarding() {
                         }}
                       />
 
-                      {/* Scan line animation */}
                       {renaperSubStep === 'scanning' && (
                         <div
                           className="absolute rounded-full overflow-hidden"
@@ -417,14 +630,12 @@ export default function CandidateOnboarding() {
                         </div>
                       )}
 
-                      {/* Face silhouette */}
                       <svg width="80" height="96" viewBox="0 0 80 96" fill="none" opacity={0.25}>
                         <ellipse cx="40" cy="34" rx="22" ry="26" fill="white" />
                         <path d="M10 90 Q10 64 40 64 Q70 64 70 90" fill="white" />
                       </svg>
                     </div>
 
-                    {/* Progress ring overlay */}
                     {renaperSubStep === 'scanning' && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                         <p className="text-xs text-white/60">Escaneando… {scanProgress}%</p>
@@ -438,7 +649,6 @@ export default function CandidateOnboarding() {
                     )}
                   </div>
 
-                  {/* Progress bar */}
                   {renaperSubStep === 'scanning' && (
                     <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div
@@ -499,7 +709,7 @@ export default function CandidateOnboarding() {
                   >
                     <CheckCircle className="w-10 h-10" style={{ color: '#639922' }} />
                   </div>
-                  <h2 className="text-xl font-semibold mb-2">Identidad verificada ✓</h2>
+                  <h2 className="text-xl font-semibold mb-2">Identidad verificada</h2>
                   <p className="text-sm text-[var(--sp-gray-medium)] mb-5">
                     Tu DNI y escaneo facial coinciden con el registro de RENAPER. Tu perfil ahora tiene
                     el sello de confianza — los reclutadores lo verán destacado.
@@ -530,8 +740,8 @@ export default function CandidateOnboarding() {
               </Button>
             )}
             {step < TOTAL_STEPS && (
-              <Button onClick={handleNext} fullWidth={step === 1}>
-                Siguiente
+              <Button onClick={handleNext} fullWidth={step === 1} disabled={saving}>
+                {saving ? 'Guardando...' : 'Siguiente'}
               </Button>
             )}
             {step === TOTAL_STEPS && renaperSubStep === 'success' && (

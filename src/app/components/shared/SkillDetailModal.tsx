@@ -139,7 +139,6 @@ export default function SkillDetailModal({
             const expResult = (v.expPts * 0.5).toFixed(1);
             const histResult = (v.histPts * 0.3).toFixed(1);
             const relResult = (v.relationPts * 0.2).toFixed(1);
-            const finalFormula = `(${v.expPts}×0.5)+(${v.histPts}×0.3)+(${v.relationPts}×0.2) = ${v.repScore.toFixed(1)}`;
 
             return (
               <div
@@ -243,11 +242,6 @@ export default function SkillDetailModal({
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-gray-200">
-                    <p className="text-xs text-[var(--sp-gray-medium)]">
-                      Puntaje final: <span className="font-mono text-[var(--sp-gray-dark)]">{finalFormula}</span>
-                    </p>
-                  </div>
                 </div>
 
                 {/* Comment with violet left border */}

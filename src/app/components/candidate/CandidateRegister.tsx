@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function CandidateRegister() {
   const navigate = useNavigate();
+  const { register, login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -12,10 +14,29 @@ export default function CandidateRegister() {
     location: '',
     currentRole: '',
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/candidate/onboarding');
+    setError('');
+    setLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        userType: 'CANDIDATE',
+        location: formData.location,
+        currentRole: formData.currentRole,
+      });
+      await login(formData.email, formData.password);
+      navigate('/candidate/onboarding');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al crear la cuenta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,8 +92,12 @@ export default function CandidateRegister() {
               onChange={(e) => setFormData({ ...formData, currentRole: e.target.value })}
             />
 
-            <Button type="submit" fullWidth className="mt-6">
-              Crear cuenta
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
+            <Button type="submit" fullWidth className="mt-6" disabled={loading}>
+              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
           </form>
 

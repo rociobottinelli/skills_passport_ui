@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
+import * as validationsApi from '../../../api/validations';
+import type { RelationType } from '../../../types';
 
 const relations = [
   { id: 'none', label: 'Sin relación', description: 'No trabajamos juntos' },
@@ -14,13 +16,47 @@ const relations = [
   { id: 'manager', label: 'Gerente directo', description: 'Fue mi manager' },
 ];
 
+const RELATION_MAP: Record<string, RelationType> = {
+  none: 'NONE',
+  classmate: 'CLASSMATE',
+  coworker: 'COWORKER',
+  teammate: 'TEAMMATE',
+  techlead: 'TECHLEAD',
+  manager: 'MANAGER',
+};
+
 export default function CandidateSpecifyRelation() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { skillId?: string; skillName?: string; validatorId?: string; validatorName?: string } | null;
+  const skillId = state?.skillId || '';
+  const skillName = state?.skillName || 'Java';
+  const validatorId = state?.validatorId || '';
+  const validatorName = state?.validatorName || 'María García';
+
   const [selectedRelation, setSelectedRelation] = useState('');
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = () => {
-    navigate('/candidate/validations-pending');
+  const handleSubmit = async () => {
+    if (!selectedRelation || !skillId || !validatorId) {
+      navigate('/candidate/validations-pending');
+      return;
+    }
+    setSaving(true);
+    try {
+      await validationsApi.createValidationRequest({
+        skillId,
+        validatorId,
+        relationType: RELATION_MAP[selectedRelation] || 'NONE',
+        message: message || undefined,
+      });
+      navigate('/candidate/validations-pending');
+    } catch {
+      navigate('/candidate/validations-pending');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -30,7 +66,7 @@ export default function CandidateSpecifyRelation() {
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-4xl mx-auto">
           <button
-            onClick={() => navigate('/candidate/request-validation')}
+            onClick={() => navigate('/candidate/request-validation', { state: { skillId, skillName } })}
             className="text-[var(--sp-violet)] hover:underline mb-6"
           >
             ← Volver
@@ -40,14 +76,14 @@ export default function CandidateSpecifyRelation() {
             <h1 className="text-4xl font-bold mb-4">Especificá la relación profesional</h1>
             <div className="flex items-center gap-3">
               <span className="text-[var(--sp-gray-medium)]">Solicitando validación de</span>
-              <Badge variant="primary">Java</Badge>
+              <Badge variant="primary">{skillName}</Badge>
               <span className="text-[var(--sp-gray-medium)]">a</span>
-              <span className="font-medium">María García</span>
+              <span className="font-medium">{validatorName}</span>
             </div>
           </div>
 
           <Card className="mb-6">
-            <h3 className="font-medium mb-4">Seleccioná tu relación profesional con María</h3>
+            <h3 className="font-medium mb-4">Seleccioná tu relación profesional con {validatorName.split(' ')[0]}</h3>
             <div className="grid gap-3">
               {relations.map((relation) => (
                 <button
@@ -71,14 +107,14 @@ export default function CandidateSpecifyRelation() {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Agregá un mensaje personal para María..."
+              placeholder={`Agregá un mensaje personal para ${validatorName.split(' ')[0]}...`}
               rows={4}
               className="w-full px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] resize-none"
             />
           </Card>
 
-          <Button onClick={handleSubmit} fullWidth disabled={!selectedRelation}>
-            Enviar solicitud
+          <Button onClick={handleSubmit} fullWidth disabled={!selectedRelation || saving}>
+            {saving ? 'Enviando...' : 'Enviar solicitud'}
           </Button>
         </div>
       </div>

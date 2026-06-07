@@ -2,18 +2,31 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function CandidateLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [userType, setUserType] = useState<'candidate' | 'recruiter'>('candidate');
-  const [formData, setFormData] = useState({ email: 'sofia.martinez@gmail.com', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (userType === 'candidate') {
-      navigate('/candidate/matches');
-    } else {
-      navigate('/recruiter/dashboard');
+    setError('');
+    setLoading(true);
+    try {
+      const returnedType = await login(formData.email, formData.password);
+      if (returnedType === 'CANDIDATE') {
+        navigate('/candidate/matches');
+      } else {
+        navigate('/recruiter/dashboard');
+      }
+    } catch {
+      setError('Email o contraseña incorrectos');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,8 +86,12 @@ export default function CandidateLogin() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
 
-            <Button type="submit" fullWidth className="mt-6">
-              Ingresar
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
+            <Button type="submit" fullWidth className="mt-6" disabled={loading}>
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
           </form>
 

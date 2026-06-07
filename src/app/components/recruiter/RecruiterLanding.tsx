@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function RecruiterLanding() {
   const navigate = useNavigate();
+  const { register, login } = useAuth();
   const [userType, setUserType] = useState<'recruiter' | 'candidate'>('recruiter');
   const [formData, setFormData] = useState({
     email: '',
@@ -12,10 +14,28 @@ export default function RecruiterLanding() {
     companyName: '',
     website: '',
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/recruiter/onboarding');
+    setError('');
+    setLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        userType: 'RECRUITER',
+        companyName: formData.companyName,
+        website: formData.website,
+      });
+      await login(formData.email, formData.password);
+      navigate('/recruiter/onboarding');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al crear la cuenta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,8 +113,12 @@ export default function RecruiterLanding() {
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
               />
 
-              <Button type="submit" fullWidth className="mt-6">
-                Crear cuenta
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
+
+              <Button type="submit" fullWidth className="mt-6" disabled={loading}>
+                {loading ? 'Creando cuenta...' : 'Crear cuenta'}
               </Button>
             </form>
 

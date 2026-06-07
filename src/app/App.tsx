@@ -25,6 +25,8 @@ import CandidateOfferDetail from './components/candidate/CandidateOfferDetail';
 import CandidateAnonymousInbox from './components/candidate/CandidateAnonymousInbox';
 import CandidateAnonymousResponse from './components/candidate/CandidateAnonymousResponse';
 import CandidateProfileRevealed from './components/candidate/CandidateProfileRevealed';
+import ProtectedRoute from './components/shared/ProtectedRoute';
+import FAQPage from './components/shared/FAQPage';
 
 export default function App() {
   return (
@@ -32,34 +34,38 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/candidate/login" replace />} />
 
-        {/* Recruiter Routes */}
+        {/* Public Routes */}
         <Route path="/recruiter/landing" element={<RecruiterLanding />} />
         <Route path="/recruiter/login" element={<RecruiterLogin />} />
-        <Route path="/recruiter/onboarding" element={<RecruiterOnboarding />} />
-        <Route path="/recruiter/dashboard-empty" element={<RecruiterDashboardEmpty />} />
-        <Route path="/recruiter/create-offer" element={<RecruiterCreateOffer />} />
-        <Route path="/recruiter/offer-published" element={<RecruiterOfferPublished />} />
-        <Route path="/recruiter/dashboard" element={<RecruiterDashboardActive />} />
-        <Route path="/recruiter/talent" element={<RecruiterTalentList />} />
-        <Route path="/recruiter/talent/:id" element={<RecruiterTalentDetail />} />
-        <Route path="/recruiter/anonymous-inbox" element={<RecruiterAnonymousInbox />} />
-        <Route path="/recruiter/anonymous/:id" element={<RecruiterAnonymousDetail />} />
-        <Route path="/recruiter/profile-revealed" element={<RecruiterProfileRevealed />} />
-
-        {/* Candidate Routes */}
         <Route path="/candidate/register" element={<CandidateRegister />} />
         <Route path="/candidate/login" element={<CandidateLogin />} />
-        <Route path="/candidate/onboarding" element={<CandidateOnboarding />} />
-        <Route path="/candidate/profile" element={<CandidateProfile />} />
-        <Route path="/candidate/request-validation" element={<CandidateRequestValidation />} />
-        <Route path="/candidate/specify-relation" element={<CandidateSpecifyRelation />} />
-        <Route path="/candidate/validations-pending" element={<CandidateValidationsPending />} />
-        <Route path="/candidate/validate-other" element={<CandidateValidateOther />} />
-        <Route path="/candidate/matches" element={<CandidateMatches />} />
-        <Route path="/candidate/offer/:id" element={<CandidateOfferDetail />} />
-        <Route path="/candidate/anonymous-inbox" element={<CandidateAnonymousInbox />} />
-        <Route path="/candidate/anonymous/:id" element={<CandidateAnonymousResponse />} />
-        <Route path="/candidate/profile-revealed" element={<CandidateProfileRevealed />} />
+
+        {/* Protected Recruiter Routes */}
+        <Route path="/recruiter/onboarding" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterOnboarding /></ProtectedRoute>} />
+        <Route path="/recruiter/dashboard-empty" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterDashboardEmpty /></ProtectedRoute>} />
+        <Route path="/recruiter/create-offer" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterCreateOffer /></ProtectedRoute>} />
+        <Route path="/recruiter/offer-published" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterOfferPublished /></ProtectedRoute>} />
+        <Route path="/recruiter/dashboard" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterDashboardActive /></ProtectedRoute>} />
+        <Route path="/recruiter/talent" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterTalentList /></ProtectedRoute>} />
+        <Route path="/recruiter/talent/:id" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterTalentDetail /></ProtectedRoute>} />
+        <Route path="/recruiter/anonymous-inbox" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterAnonymousInbox /></ProtectedRoute>} />
+        <Route path="/recruiter/anonymous/:id" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterAnonymousDetail /></ProtectedRoute>} />
+        <Route path="/recruiter/profile-revealed" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterProfileRevealed /></ProtectedRoute>} />
+        <Route path="/recruiter/faq" element={<ProtectedRoute requiredRole="RECRUITER"><FAQPage type="recruiter" /></ProtectedRoute>} />
+
+        {/* Protected Candidate Routes */}
+        <Route path="/candidate/onboarding" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateOnboarding /></ProtectedRoute>} />
+        <Route path="/candidate/profile" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateProfile /></ProtectedRoute>} />
+        <Route path="/candidate/request-validation" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateRequestValidation /></ProtectedRoute>} />
+        <Route path="/candidate/specify-relation" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateSpecifyRelation /></ProtectedRoute>} />
+        <Route path="/candidate/validations-pending" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateValidationsPending /></ProtectedRoute>} />
+        <Route path="/candidate/validate-other" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateValidateOther /></ProtectedRoute>} />
+        <Route path="/candidate/matches" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateMatches /></ProtectedRoute>} />
+        <Route path="/candidate/offer/:id" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateOfferDetail /></ProtectedRoute>} />
+        <Route path="/candidate/anonymous-inbox" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateAnonymousInbox /></ProtectedRoute>} />
+        <Route path="/candidate/anonymous/:id" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateAnonymousResponse /></ProtectedRoute>} />
+        <Route path="/candidate/profile-revealed" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateProfileRevealed /></ProtectedRoute>} />
+        <Route path="/candidate/faq" element={<ProtectedRoute requiredRole="CANDIDATE"><FAQPage type="candidate" /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

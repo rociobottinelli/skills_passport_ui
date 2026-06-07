@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
@@ -6,12 +6,36 @@ import Input from '../shared/Input';
 import Badge from '../shared/Badge';
 import Card from '../shared/Card';
 import { X } from 'lucide-react';
+import * as recruiterApi from '../../../api/recruiter';
+import * as skillsApi from '../../../api/skills';
+import type { Modality, Seniority, SkillResponse } from '../../../types';
+
+const MODALITY_MAP: Record<string, Modality> = {
+  remote: 'REMOTE',
+  hybrid: 'HYBRID',
+  onsite: 'ONSITE',
+};
+
+const SENIORITY_MAP: Record<string, Seniority> = {
+  junior: 'JUNIOR',
+  'semi-senior': 'SEMI_SENIOR',
+  senior: 'SENIOR',
+  lead: 'LEAD',
+};
+
+interface OfferSkillEntry {
+  skillId: string;
+  name: string;
+  requirement: 'REQUIRED' | 'DESIRABLE';
+}
 
 export default function RecruiterCreateOffer() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [skills, setSkills] = useState<string[]>([]);
+  const [skills, setSkills] = useState<OfferSkillEntry[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  const [skillSearchResults, setSkillSearchResults] = useState<SkillResponse[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<SkillResponse[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     modality: '',
@@ -21,23 +45,69 @@ export default function RecruiterCreateOffer() {
     salaryMax: '',
     benefits: '',
   });
+  const [saving, setSaving] = useState(false);
 
-  const suggestedSkills = ['React', 'TypeScript', 'Node.js', 'Python', 'Java', 'Product Management', 'Figma', 'SQL'];
+  useEffect(() => {
+    skillsApi.getSuggestions().then(setSuggestedSkills).catch(() => {});
+  }, []);
 
-  const addSkill = (skill: string) => {
-    if (skill && !skills.includes(skill)) {
-      setSkills([...skills, skill]);
-      setSkillInput('');
+  useEffect(() => {
+    if (!skillInput) {
+      setSkillSearchResults([]);
+      return;
     }
+    const timeout = setTimeout(() => {
+      skillsApi.searchSkills(skillInput).then(setSkillSearchResults).catch(() => {});
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [skillInput]);
+
+  const addSkillFromCatalog = (skill: SkillResponse, requirement: 'REQUIRED' | 'DESIRABLE' = 'REQUIRED') => {
+    if (!skills.find((s) => s.skillId === skill.id)) {
+      setSkills([...skills, { skillId: skill.id, name: skill.name, requirement }]);
+    }
+    setSkillInput('');
+    setSkillSearchResults([]);
   };
 
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
+  const toggleRequirement = (skillId: string) => {
+    setSkills(
+      skills.map((s) =>
+        s.skillId === skillId
+          ? { ...s, requirement: s.requirement === 'REQUIRED' ? 'DESIRABLE' : 'REQUIRED' }
+          : s
+      )
+    );
   };
 
-  const handleNext = () => {
-    if (step < 4) setStep(step + 1);
-    else navigate('/recruiter/offer-published');
+  const removeSkill = (skillId: string) => {
+    setSkills(skills.filter((s) => s.skillId !== skillId));
+  };
+
+  const handleNext = async () => {
+    if (step < 4) {
+      setStep(step + 1);
+    } else {
+      setSaving(true);
+      try {
+        const offerId = await recruiterApi.createOffer({
+          title: formData.title,
+          modality: MODALITY_MAP[formData.modality] || 'REMOTE',
+          seniority: SENIORITY_MAP[formData.seniority] || 'SENIOR',
+          description: formData.description || undefined,
+          salaryMin: formData.salaryMin ? Number(formData.salaryMin) : undefined,
+          salaryMax: formData.salaryMax ? Number(formData.salaryMax) : undefined,
+          benefits: formData.benefits || undefined,
+          skills: skills.map((s) => ({ skillId: s.skillId, requirement: s.requirement })),
+        });
+        await recruiterApi.publishOffer(offerId);
+        navigate('/recruiter/offer-published', { state: { offerTitle: formData.title } });
+      } catch {
+        navigate('/recruiter/offer-published');
+      } finally {
+        setSaving(false);
+      }
+    }
   };
 
   return (
@@ -107,53 +177,80 @@ export default function RecruiterCreateOffer() {
             {step === 2 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold">Habilidades requeridas</h2>
-                <div>
-                  <div className="flex gap-2 mb-4">
-                    <Input
-                      placeholder="Escribí una habilidad..."
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyPress={(e: React.KeyboardEvent) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addSkill(skillInput);
-                        }
-                      }}
-                    />
-                    <Button onClick={() => addSkill(skillInput)}>Agregar</Button>
-                  </div>
+                <p className="text-sm text-[var(--sp-gray-medium)]">
+                  Seleccioná del catálogo. Click en una skill para alternar entre requerida y deseable.
+                </p>
 
-                  {skills.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {skills.map((skill) => (
-                        <Badge key={skill} variant="primary">
-                          {skill}
-                          <button
-                            onClick={() => removeSkill(skill)}
-                            className="ml-2 hover:opacity-70"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
+                <div>
+                  <Input
+                    label="Buscar habilidad"
+                    placeholder="Ej: React, Java, PostgreSQL..."
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyPress={(e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter' && skillSearchResults.length > 0) {
+                        e.preventDefault();
+                        addSkillFromCatalog(skillSearchResults[0]);
+                      }
+                    }}
+                  />
+                  {skillSearchResults.length > 0 && (
+                    <div className="border border-gray-200 rounded-lg mt-1 max-h-40 overflow-y-auto bg-white shadow-sm">
+                      {skillSearchResults.map((skill) => (
+                        <button
+                          key={skill.id}
+                          onClick={() => addSkillFromCatalog(skill)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--sp-violet-light)] transition-all"
+                        >
+                          {skill.name} <span className="text-xs text-gray-400">({skill.type})</span>
+                        </button>
                       ))}
                     </div>
                   )}
+                </div>
 
-                  <div>
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-2">Skills sugeridas:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {suggestedSkills
-                        .filter((s) => !skills.includes(s))
-                        .map((skill) => (
-                          <button
-                            key={skill}
-                            onClick={() => addSkill(skill)}
-                            className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-[var(--sp-violet)] hover:bg-[#E8E7FE] transition-all"
+                {skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => (
+                      <button
+                        key={skill.skillId}
+                        onClick={() => toggleRequirement(skill.skillId)}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <Badge variant={skill.requirement === 'REQUIRED' ? 'primary' : 'neutral'}>
+                          {skill.name}
+                          <span className="text-xs opacity-70">
+                            · {skill.requirement === 'REQUIRED' ? 'requerida' : 'deseable'}
+                          </span>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeSkill(skill.skillId);
+                            }}
+                            className="ml-1 hover:opacity-70"
                           >
-                            + {skill}
-                          </button>
-                        ))}
-                    </div>
+                            <X className="w-3 h-3" />
+                          </span>
+                        </Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-sm text-[var(--sp-gray-medium)] mb-2">Skills sugeridas:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedSkills
+                      .filter((s) => !skills.find((sk) => sk.skillId === s.id))
+                      .map((skill) => (
+                        <button
+                          key={skill.id}
+                          onClick={() => addSkillFromCatalog(skill)}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-[var(--sp-violet)] hover:bg-[#E8E7FE] transition-all"
+                        >
+                          + {skill.name}
+                        </button>
+                      ))}
                   </div>
                 </div>
               </div>
@@ -218,8 +315,8 @@ export default function RecruiterCreateOffer() {
                       <h4 className="font-medium mb-2">Habilidades requeridas</h4>
                       <div className="flex flex-wrap gap-2">
                         {skills.map((skill) => (
-                          <Badge key={skill} variant="primary">
-                            {skill}
+                          <Badge key={skill.skillId} variant={skill.requirement === 'REQUIRED' ? 'primary' : 'neutral'}>
+                            {skill.name}
                           </Badge>
                         ))}
                       </div>
@@ -251,8 +348,8 @@ export default function RecruiterCreateOffer() {
                   Volver
                 </Button>
               )}
-              <Button onClick={handleNext} fullWidth={step === 1}>
-                {step === 4 ? 'Publicar búsqueda' : 'Siguiente'}
+              <Button onClick={handleNext} fullWidth={step === 1} disabled={saving}>
+                {saving ? 'Publicando...' : step === 4 ? 'Publicar búsqueda' : 'Siguiente'}
               </Button>
             </div>
           </Card>

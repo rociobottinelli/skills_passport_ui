@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
 import { Upload } from 'lucide-react';
+import * as recruiterApi from '../../../api/recruiter';
+import type { Industry, CompanySize } from '../../../types';
+
+const INDUSTRY_MAP: Record<string, Industry> = {
+  tech: 'TECH',
+  finance: 'FINANCE',
+  ecommerce: 'ECOMMERCE',
+  consulting: 'CONSULTING',
+  other: 'OTHER',
+};
+
+const SIZE_MAP: Record<string, CompanySize> = {
+  '1-10': '1-10',
+  '11-50': '11-50',
+  '51-200': '51-200',
+  '201-1000': '201-1000',
+  '1000+': '1000+',
+};
 
 export default function RecruiterOnboarding() {
   const navigate = useNavigate();
@@ -13,12 +31,26 @@ export default function RecruiterOnboarding() {
     companySize: '',
     description: '',
   });
+  const [saving, setSaving] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      navigate('/recruiter/dashboard-empty');
+      setSaving(true);
+      try {
+        await recruiterApi.createCompany({
+          name: formData.companyName,
+          industry: INDUSTRY_MAP[formData.industry],
+          size: SIZE_MAP[formData.companySize],
+          cultureDescription: formData.description || undefined,
+        });
+        navigate('/recruiter/dashboard-empty');
+      } catch {
+        navigate('/recruiter/dashboard-empty');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -124,8 +156,8 @@ export default function RecruiterOnboarding() {
                 Volver
               </Button>
             )}
-            <Button onClick={handleNext} fullWidth={step === 1}>
-              {step === 3 ? 'Finalizar' : 'Siguiente'}
+            <Button onClick={handleNext} fullWidth={step === 1} disabled={saving}>
+              {saving ? 'Guardando...' : step === 3 ? 'Finalizar' : 'Siguiente'}
             </Button>
           </div>
         </div>

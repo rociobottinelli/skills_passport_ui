@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -7,6 +7,8 @@ import MatchScore from '../shared/MatchScore';
 import SkillLevelRow from '../shared/SkillLevelRow';
 import ValidatorModal, { ValidatorData } from '../shared/ValidatorModal';
 import { Briefcase, Shield, Mail, ChevronRight } from 'lucide-react';
+import * as matchesApi from '../../../api/matches';
+import type { RecruiterCandidateMatchResponse } from '../../../types';
 
 const techSkills = [
   {
@@ -120,7 +122,39 @@ const experience = [
 
 export default function RecruiterTalentDetail() {
   const navigate = useNavigate();
+  const { id: candidateId } = useParams<{ id: string }>();
+  const location = useLocation();
+  const state = location.state as { offerId?: string } | null;
+  const offerId = state?.offerId || '';
+
+  const [candidate, setCandidate] = useState<RecruiterCandidateMatchResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedValidator, setSelectedValidator] = useState<ValidatorData | null>(null);
+
+  useEffect(() => {
+    if (offerId && candidateId) {
+      matchesApi.getOfferCandidate(offerId, candidateId)
+        .then(setCandidate)
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [offerId, candidateId]);
+
+  const displayName = candidate?.candidateName || 'Candidato';
+  const initials = displayName.split(' ').map((n) => n[0]).join('').slice(0, 2);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+        <Sidebar type="recruiter" />
+        <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+          <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
@@ -129,7 +163,7 @@ export default function RecruiterTalentDetail() {
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-4xl mx-auto">
           <button
-            onClick={() => navigate('/recruiter/talent')}
+            onClick={() => navigate('/recruiter/talent', { state: { offerId } })}
             className="text-sm text-[var(--sp-violet)] hover:underline mb-6"
           >
             ← Volver a la lista
@@ -140,33 +174,36 @@ export default function RecruiterTalentDetail() {
             <div className="flex justify-between items-start mb-5">
               <div className="flex gap-5">
                 <div className="w-20 h-20 bg-gradient-to-br from-[var(--sp-violet)] to-[var(--sp-violet-dark)] rounded-2xl flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
-                  SM
+                  {initials}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h1 className="text-2xl font-semibold">Sofía Martínez</h1>
-                    <span
-                      className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: '#EAF3DE', color: '#27500A' }}
-                    >
-                      <Shield className="w-3 h-3" />
-                      Identidad verificada
-                    </span>
+                    <h1 className="text-2xl font-semibold">{displayName}</h1>
+                    {candidate?.identityVerified && (
+                      <span
+                        className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
+                        style={{ backgroundColor: '#EAF3DE', color: '#27500A' }}
+                      >
+                        <Shield className="w-3 h-3" />
+                        Identidad verificada
+                      </span>
+                    )}
                   </div>
                   <p className="text-[var(--sp-gray-medium)] mb-3">
-                    Senior Backend Engineer · Buenos Aires · 7 años de exp.
+                    {candidate?.currentRole || ''}{candidate?.location ? ` · ${candidate.location}` : ''}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    <Badge variant="validated">✓ 8 habilidades validadas</Badge>
-                    <Badge variant="neutral">💼 7 años</Badge>
+                    {(candidate?.skills || []).map((skill) => (
+                      <Badge key={skill} variant="validated">{skill}</Badge>
+                    ))}
                   </div>
                 </div>
               </div>
-              <MatchScore score={94} size="lg" />
+              <MatchScore score={candidate?.matchScore ?? 0} size="lg" />
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={() => navigate('/recruiter/anonymous-inbox')}>
+              <Button onClick={() => navigate('/recruiter/anonymous-inbox', { state: { offerId } })}>
                 <div className="flex items-center justify-center gap-2">
                   <Mail className="w-4 h-4" />
                   <span>Contactar</span>
@@ -176,39 +213,36 @@ export default function RecruiterTalentDetail() {
             </div>
           </div>
 
-          {/* Contact info */}
-          <div
-            className="rounded-2xl p-6 mb-4"
-            style={{ backgroundColor: '#EAF3DE', border: '1px solid #C5DFA8' }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="font-medium text-sm" style={{ color: '#27500A' }}>
-                Datos de contacto — Perfil revelado
-              </h3>
-            </div>
-            <div className="grid grid-cols-3 gap-6">
-              <div>
-                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">Email</p>
-                <p className="text-sm font-medium">sofia.martinez@gmail.com</p>
+          {/* Contact info - only if profile revealed */}
+          {candidate?.profileRevealed && candidate.email && (
+            <div
+              className="rounded-2xl p-6 mb-4"
+              style={{ backgroundColor: '#EAF3DE', border: '1px solid #C5DFA8' }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-medium text-sm" style={{ color: '#27500A' }}>
+                  Datos de contacto — Perfil revelado
+                </h3>
               </div>
-              <div>
-                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">Teléfono</p>
-                <p className="text-sm font-medium">+54 11 5555-0123</p>
-              </div>
-              <div>
-                <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">LinkedIn</p>
-                <a href="#" className="text-sm font-medium text-[var(--sp-violet)] hover:underline">
-                  sofia-martinez
-                </a>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">Email</p>
+                  <p className="text-sm font-medium">{candidate.email}</p>
+                </div>
+                {candidate.linkedIn && (
+                  <div>
+                    <p className="text-xs text-[var(--sp-gray-medium)] mb-0.5">LinkedIn</p>
+                    <p className="text-sm font-medium text-[var(--sp-violet)]">{candidate.linkedIn}</p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Skills */}
+          {/* Skills - mock data for now, backend needs to return full skill details */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
             <h3 className="font-semibold mb-3">Habilidades validadas</h3>
 
-            {/* Scale legend */}
             <p className="text-xs text-[var(--sp-gray-medium)] mb-5 leading-relaxed">
               <span className="font-medium">Colaborador</span> · trabajó con esto
               &nbsp;|&nbsp;

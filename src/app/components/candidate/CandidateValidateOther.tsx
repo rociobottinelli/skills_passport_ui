@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
 import { Shield, CheckCircle } from 'lucide-react';
+import * as validationsApi from '../../../api/validations';
+import type { SkillLevel as ApiSkillLevel } from '../../../types';
 
 type SkillLevel = 'Colaborador' | 'Ejecutor autónomo' | 'Líder' | 'Referente';
 
@@ -14,6 +16,13 @@ const LEVELS: { value: SkillLevel; description: string }[] = [
   { value: 'Referente', description: 'Es referente y forma a otros' },
 ];
 
+const LEVEL_MAP: Record<SkillLevel, ApiSkillLevel> = {
+  'Colaborador': 'COLABORADOR',
+  'Ejecutor autónomo': 'EJECUTOR_AUTONOMO',
+  'Líder': 'LIDER',
+  'Referente': 'REFERENTE',
+};
+
 const WEIGHT_BY_REPUTATION: Record<string, string> = {
   Platino: 'Muy alto',
   Oro: 'Alto',
@@ -23,12 +32,47 @@ const WEIGHT_BY_REPUTATION: Record<string, string> = {
 
 export default function CandidateValidateOther() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { requestId?: string; skillName?: string; requesterName?: string } | null;
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel | null>(null);
-  const [comment, setComment] = useState(
-    'Trabajamos juntos 2 años en el equipo de pagos. Sólido en arquitectura y muy buen referente técnico.'
-  );
+  const [comment, setComment] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleValidate = () => {
+  const requestId = state?.requestId;
+  const skillName = state?.skillName || 'Java';
+  const requesterName = state?.requesterName || 'Julián López';
+  const requesterInitials = requesterName.split(' ').map((n) => n[0]).join('').slice(0, 2);
+
+  const handleValidate = async () => {
+    if (!selectedLevel || !requestId) {
+      navigate('/candidate/validations-pending');
+      return;
+    }
+    setSaving(true);
+    try {
+      await validationsApi.submitValidation({
+        requestId,
+        assignedLevel: LEVEL_MAP[selectedLevel],
+        comment: comment || undefined,
+      });
+      navigate('/candidate/validations-pending');
+    } catch {
+      navigate('/candidate/validations-pending');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!requestId) {
+      navigate('/candidate/validations-pending');
+      return;
+    }
+    try {
+      await validationsApi.rejectValidationRequest(requestId);
+    } catch {
+      // continue
+    }
     navigate('/candidate/validations-pending');
   };
 
@@ -51,12 +95,12 @@ export default function CandidateValidateOther() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-                JL
+                {requesterInitials}
               </div>
               <div>
-                <h2 className="font-semibold mb-0.5">Julián López</h2>
+                <h2 className="font-semibold mb-0.5">{requesterName}</h2>
                 <p className="text-sm text-[var(--sp-gray-medium)] mb-1">
-                  Te pidió validar su habilidad en <span className="font-medium text-[var(--sp-gray-dark)]">Java</span>
+                  Te pidió validar su habilidad en <span className="font-medium text-[var(--sp-gray-dark)]">{skillName}</span>
                 </p>
                 <Badge variant="primary" size="sm">
                   Compañero de proyecto
@@ -67,7 +111,7 @@ export default function CandidateValidateOther() {
 
           {/* Level selector */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
-            <h3 className="font-medium mb-1">¿Qué nivel describís mejor su desempeño en Java?</h3>
+            <h3 className="font-medium mb-1">¿Qué nivel describís mejor su desempeño en {skillName}?</h3>
             <p className="text-xs text-[var(--sp-gray-medium)] mb-4">
               Elegí el nivel que mejor representa lo que viste trabajar juntos.
             </p>
@@ -143,15 +187,15 @@ export default function CandidateValidateOther() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => navigate('/candidate/validations-pending')}>
+            <Button variant="secondary" onClick={handleReject}>
               Rechazar
             </Button>
             <Button
               onClick={handleValidate}
-              disabled={!selectedLevel}
+              disabled={!selectedLevel || saving}
               fullWidth
             >
-              Validar
+              {saving ? 'Validando...' : 'Validar'}
             </Button>
           </div>
         </div>

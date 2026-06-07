@@ -1,19 +1,77 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { MessageSquare, Award, TrendingUp, EyeOff } from 'lucide-react';
+import { MessageSquare, EyeOff } from 'lucide-react';
+import * as messagesApi from '../../../api/messages';
+import type { AnonymousThreadDetailResponse } from '../../../types';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  SALARY: 'Sueldo',
+  CULTURE: 'Cultura',
+  STACK: 'Stack',
+  BENEFITS: 'Beneficios',
+  MODALITY: 'Modalidad',
+  OTHER: 'Otro',
+};
 
 export default function RecruiterAnonymousDetail() {
   const navigate = useNavigate();
-  const [response, setResponse] = useState('El rango se mantiene para Argentina y pagamos en USD vía contractor. Sumamos bono anual de hasta 2 sueldos por OKRs.');
+  const { id: threadId } = useParams<{ id: string }>();
+  const location = useLocation();
+  const state = location.state as { offerId?: string } | null;
+  const offerId = state?.offerId || '';
 
-  const handleSend = () => {
-    navigate('/recruiter/anonymous-inbox');
+  const [thread, setThread] = useState<AnonymousThreadDetailResponse | null>(null);
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (offerId && threadId) {
+      messagesApi.getOfferThread(offerId, threadId)
+        .then((data) => {
+          setThread(data);
+          const existingResponse = data.messages.find((m) => m.senderType === 'RECRUITER');
+          if (existingResponse) setResponse(existingResponse.content);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [offerId, threadId]);
+
+  const candidateMessage = thread?.messages.find((m) => m.senderType === 'CANDIDATE');
+  const recruiterMessage = thread?.messages.find((m) => m.senderType === 'RECRUITER');
+  const category = CATEGORY_LABELS[thread?.category || ''] || thread?.category || '';
+
+  const handleSend = async () => {
+    if (!threadId || !response.trim()) return;
+    setSending(true);
+    try {
+      await messagesApi.sendMessage(threadId, { content: response });
+      navigate('/recruiter/anonymous-inbox', { state: { offerId } });
+    } catch {
+      // stay on page
+    } finally {
+      setSending(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+        <Sidebar type="recruiter" />
+        <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+          <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
@@ -22,7 +80,7 @@ export default function RecruiterAnonymousDetail() {
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-5xl mx-auto">
           <button
-            onClick={() => navigate('/recruiter/anonymous-inbox')}
+            onClick={() => navigate('/recruiter/anonymous-inbox', { state: { offerId } })}
             className="text-[var(--sp-violet)] hover:underline mb-6"
           >
             ← Volver a consultas
@@ -46,71 +104,65 @@ export default function RecruiterAnonymousDetail() {
                     <MessageSquare className="w-8 h-8 text-white relative z-10" />
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-1">Candidato anónimo · #A-3847</h2>
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-2">Postuló a: Senior Backend Engineer</p>
+                    <h2 className="text-2xl font-bold mb-1">
+                      Candidato anónimo · {thread?.anonymousCode || ''}
+                    </h2>
                     <div className="flex gap-2">
-                      <Badge variant="match" size="sm">
-                        🎯 95% match
-                      </Badge>
-                      <Badge variant="primary" size="sm">
-                        🛡 Validado por 2 perfiles senior
-                      </Badge>
+                      {category && (
+                        <Badge variant="primary" size="sm">
+                          {category}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-[var(--sp-amber-bg)] border border-[var(--sp-amber)] rounded-xl p-6 mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="primary" size="sm" className="bg-[var(--sp-amber)] text-white">
-                      💰 Sueldo
-                    </Badge>
+                {candidateMessage && (
+                  <div className="bg-[var(--sp-amber-bg)] border border-[var(--sp-amber)] rounded-xl p-6 mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      {category && (
+                        <Badge variant="primary" size="sm" className="bg-[var(--sp-amber)] text-white">
+                          {category}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[var(--sp-gray-dark)]">
+                      "{candidateMessage.content}"
+                    </p>
                   </div>
-                  <p className="text-[var(--sp-gray-dark)]">
-                    "Hola, me interesa mucho la posición. Antes de avanzar, ¿podrían confirmarme si el rango publicado en USD se mantiene para Argentina y si incluye bonos por performance? Gracias."
-                  </p>
-                </div>
+                )}
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Tu respuesta</label>
-                  <textarea
-                    value={response}
-                    onChange={(e) => setResponse(e.target.value)}
-                    placeholder="Respondé la consulta del candidato para atraer su interés..."
-                    rows={6}
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] resize-none"
-                  />
-                </div>
+                {!recruiterMessage && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Tu respuesta</label>
+                      <textarea
+                        value={response}
+                        onChange={(e) => setResponse(e.target.value)}
+                        placeholder="Respondé la consulta del candidato para atraer su interés..."
+                        rows={6}
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] resize-none"
+                      />
+                    </div>
 
-                <Button onClick={handleSend} fullWidth className="mt-4">
-                  Enviar respuesta
-                </Button>
+                    <Button onClick={handleSend} fullWidth className="mt-4" disabled={!response.trim() || sending}>
+                      {sending ? 'Enviando...' : 'Enviar respuesta'}
+                    </Button>
+                  </>
+                )}
+
+                {recruiterMessage && (
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+                    <p className="text-sm font-medium mb-2">Tu respuesta:</p>
+                    <p className="text-[var(--sp-gray-dark)]">{recruiterMessage.content}</p>
+                  </div>
+                )}
               </Card>
             </div>
 
             <div className="space-y-6">
-              <Card>
-                <h3 className="text-lg font-bold mb-4">Indicadores de potencial</h3>
-
-                <div className="space-y-4">
-                  <div className="p-4 bg-[var(--sp-gray-light)] rounded-xl">
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-1">Match score</p>
-                    <p className="text-3xl font-bold text-[var(--sp-match-green)]">95%</p>
-                  </div>
-
-                  <div className="p-4 bg-[var(--sp-gray-light)] rounded-xl">
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-1">Habilidades validadas</p>
-                    <p className="text-3xl font-bold">8</p>
-                  </div>
-
-                  <div className="p-4 bg-[var(--sp-gray-light)] rounded-xl">
-                    <p className="text-sm text-[var(--sp-gray-medium)] mb-1">Confianza promedio</p>
-                    <p className="text-3xl font-bold">8.7</p>
-                  </div>
-                </div>
-              </Card>
-
               <div className="bg-gradient-to-br from-[var(--sp-violet)] to-indigo-600 rounded-2xl p-6 text-white">
-                <h4 className="font-bold mb-2">💡 Consejo</h4>
+                <h4 className="font-bold mb-2">Consejo</h4>
                 <p className="text-sm text-white/90 mb-3">
                   Sé transparente y detallado en tu respuesta. Una buena respuesta puede motivar al
                   candidato a marcar "Me interesa".

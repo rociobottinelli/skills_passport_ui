@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router';
-import { Briefcase, Users, MessageSquare, User, Award, Mail } from 'lucide-react';
+import { Briefcase, Users, MessageSquare, User, Award, Mail, HelpCircle, LogOut } from 'lucide-react';
 
 interface NavItem {
   label: string;
@@ -19,6 +19,7 @@ export default function Sidebar({ type }: SidebarProps) {
     { label: 'Mis búsquedas', path: '/recruiter/dashboard', icon: <Briefcase className="w-5 h-5" /> },
     { label: 'Talento', path: '/recruiter/talent', icon: <Users className="w-5 h-5" /> },
     { label: 'Mensajes anónimos', path: '/recruiter/anonymous-inbox', icon: <MessageSquare className="w-5 h-5" /> },
+    { label: 'FAQ', path: '/recruiter/faq', icon: <HelpCircle className="w-5 h-5" /> },
   ];
 
   const candidateNav: NavItem[] = [
@@ -26,6 +27,7 @@ export default function Sidebar({ type }: SidebarProps) {
     { label: 'Mis habilidades', path: '/candidate/profile', icon: <Award className="w-5 h-5" /> },
     { label: 'Validaciones', path: '/candidate/validations-pending', icon: <Users className="w-5 h-5" /> },
     { label: 'Mensajes', path: '/candidate/anonymous-inbox', icon: <Mail className="w-5 h-5" /> },
+    { label: 'FAQ', path: '/candidate/faq', icon: <HelpCircle className="w-5 h-5" /> },
   ];
 
   const navItems = type === 'recruiter' ? recruiterNav : candidateNav;
@@ -65,6 +67,20 @@ export default function Sidebar({ type }: SidebarProps) {
           );
         })}
       </nav>
+
+      <div className="px-3 pb-6">
+        <button
+          onClick={() => {
+            localStorage.removeItem('sp_token');
+            localStorage.removeItem('sp_user_type');
+            navigate('/candidate/login');
+          }}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--sp-gray-medium)] hover:bg-red-50 hover:text-red-600 transition-all"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="font-medium">Cerrar sesión</span>
+        </button>
+      </div>
     </div>
   );
 }

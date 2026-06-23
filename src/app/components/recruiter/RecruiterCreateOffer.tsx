@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import Select from '../shared/Select';
 import Badge from '../shared/Badge';
 import Card from '../shared/Card';
 import { X } from 'lucide-react';
@@ -22,6 +23,19 @@ const SENIORITY_MAP: Record<string, Seniority> = {
   senior: 'SENIOR',
   lead: 'LEAD',
 };
+
+const MODALITY_OPTIONS = [
+  { value: 'remote', label: 'Remoto' },
+  { value: 'hybrid', label: 'Híbrido' },
+  { value: 'onsite', label: 'Presencial' },
+];
+
+const SENIORITY_OPTIONS = [
+  { value: 'junior', label: 'Junior' },
+  { value: 'semi-senior', label: 'Semi-Senior' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'lead', label: 'Lead' },
+];
 
 interface OfferSkillEntry {
   skillId: string;
@@ -46,6 +60,7 @@ export default function RecruiterCreateOffer() {
     benefits: '',
   });
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     skillsApi.getSuggestions().then(setSuggestedSkills).catch(() => {});
@@ -85,6 +100,20 @@ export default function RecruiterCreateOffer() {
   };
 
   const handleNext = async () => {
+    if (step === 1) {
+      const errors: Record<string, string> = {};
+      if (!formData.modality) {
+        errors.modality = 'Seleccioná una modalidad';
+      }
+      if (!formData.seniority) {
+        errors.seniority = 'Seleccioná un seniority';
+      }
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        return;
+      }
+    }
+
     if (step < 4) {
       setStep(step + 1);
     } else {
@@ -143,33 +172,30 @@ export default function RecruiterCreateOffer() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Modalidad</label>
-                    <select
-                      value={formData.modality}
-                      onChange={(e) => setFormData({ ...formData, modality: e.target.value })}
-                      className="px-4 py-3 bg-[var(--sp-gray-light)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]"
-                    >
-                      <option value="">Seleccioná</option>
-                      <option value="remote">Remoto</option>
-                      <option value="hybrid">Híbrido</option>
-                      <option value="onsite">Presencial</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Seniority</label>
-                    <select
-                      value={formData.seniority}
-                      onChange={(e) => setFormData({ ...formData, seniority: e.target.value })}
-                      className="px-4 py-3 bg-[var(--sp-gray-light)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]"
-                    >
-                      <option value="">Seleccioná</option>
-                      <option value="junior">Junior</option>
-                      <option value="semi-senior">Semi-Senior</option>
-                      <option value="senior">Senior</option>
-                      <option value="lead">Lead</option>
-                    </select>
-                  </div>
+                  <Select
+                    label="Modalidad"
+                    placeholder="Seleccioná"
+                    value={formData.modality}
+                    onChange={(e) => {
+                      setFormData({ ...formData, modality: e.target.value });
+                      setFieldErrors((prev) => { const { modality, ...rest } = prev; return rest; });
+                    }}
+                    options={MODALITY_OPTIONS}
+                    error={fieldErrors.modality}
+                    required
+                  />
+                  <Select
+                    label="Seniority"
+                    placeholder="Seleccioná"
+                    value={formData.seniority}
+                    onChange={(e) => {
+                      setFormData({ ...formData, seniority: e.target.value });
+                      setFieldErrors((prev) => { const { seniority, ...rest } = prev; return rest; });
+                    }}
+                    options={SENIORITY_OPTIONS}
+                    error={fieldErrors.seniority}
+                    required
+                  />
                 </div>
               </div>
             )}

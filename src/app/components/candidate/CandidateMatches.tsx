@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Card from '../shared/Card';
+import Select from '../shared/Select';
 import MatchScore from '../shared/MatchScore';
 import { Filter } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
@@ -15,11 +16,32 @@ const LOGO_STYLES = [
   { color: 'from-blue-100 to-blue-200', text: 'text-blue-600' },
 ];
 
+const SALARY_OPTIONS = [
+  { value: '50k-80k', label: 'USD 50k - 80k' },
+  { value: '80k-120k', label: 'USD 80k - 120k' },
+  { value: '120k+', label: 'USD 120k+' },
+];
+
+const MODALITY_OPTIONS = [
+  { value: 'remoto', label: 'Remoto' },
+  { value: 'hibrido', label: 'Híbrido' },
+  { value: 'presencial', label: 'Presencial' },
+];
+
+const SENIORITY_OPTIONS = [
+  { value: 'junior', label: 'Junior' },
+  { value: 'semi-senior', label: 'Semi-Senior' },
+  { value: 'senior', label: 'Senior' },
+];
+
 export default function CandidateMatches() {
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [matches, setMatches] = useState<CandidateMatchResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [filters, setFilters] = useState({ salary: '', modality: '', seniority: '' });
+  const [filterErrors, setFilterErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     matchesApi.getCandidateMatches()
@@ -27,6 +49,16 @@ export default function CandidateMatches() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Live validation: show error when filter panel is open and a field is empty
+  useEffect(() => {
+    if (!showFilters) return;
+    const errors: Record<string, string> = {};
+    if (!filters.salary) errors.salary = 'Seleccioná un rango salarial';
+    if (!filters.modality) errors.modality = 'Seleccioná una modalidad';
+    if (!filters.seniority) errors.seniority = 'Seleccioná un seniority';
+    setFilterErrors(errors);
+  }, [filters, showFilters]);
 
   const offers = matches.map((m, i) => ({
     id: m.offerId,
@@ -66,33 +98,33 @@ export default function CandidateMatches() {
           {showFilters && (
             <Card className="mb-6">
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Rango salarial</label>
-                  <select className="w-full px-4 py-2 bg-[var(--sp-gray-light)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]">
-                    <option>Todos</option>
-                    <option>USD 50k - 80k</option>
-                    <option>USD 80k - 120k</option>
-                    <option>USD 120k+</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Modalidad</label>
-                  <select className="w-full px-4 py-2 bg-[var(--sp-gray-light)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]">
-                    <option>Todas</option>
-                    <option>Remoto</option>
-                    <option>Híbrido</option>
-                    <option>Presencial</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Seniority</label>
-                  <select className="w-full px-4 py-2 bg-[var(--sp-gray-light)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]">
-                    <option>Todos</option>
-                    <option>Junior</option>
-                    <option>Semi-Senior</option>
-                    <option>Senior</option>
-                  </select>
-                </div>
+                <Select
+                  label="Rango salarial"
+                  placeholder="Seleccioná un rango"
+                  value={filters.salary}
+                  onChange={(e) => setFilters({ ...filters, salary: e.target.value })}
+                  options={SALARY_OPTIONS}
+                  error={filterErrors.salary}
+                  required
+                />
+                <Select
+                  label="Modalidad"
+                  placeholder="Seleccioná modalidad"
+                  value={filters.modality}
+                  onChange={(e) => setFilters({ ...filters, modality: e.target.value })}
+                  options={MODALITY_OPTIONS}
+                  error={filterErrors.modality}
+                  required
+                />
+                <Select
+                  label="Seniority"
+                  placeholder="Seleccioná seniority"
+                  value={filters.seniority}
+                  onChange={(e) => setFilters({ ...filters, seniority: e.target.value })}
+                  options={SENIORITY_OPTIONS}
+                  error={filterErrors.seniority}
+                  required
+                />
               </div>
             </Card>
           )}

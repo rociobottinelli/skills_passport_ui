@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import Select from '../shared/Select';
 import { Upload, X, Shield, CheckCircle, Lock, Camera, ScanFace, Plus, Briefcase, FolderOpen } from 'lucide-react';
 import * as candidateApi from '../../../api/candidate';
 import * as skillsApi from '../../../api/skills';
@@ -52,8 +53,15 @@ export default function CandidateOnboarding() {
   const [renaperSubStep, setRenaperSubStep] = useState<'form' | 'scan' | 'scanning' | 'success'>('form');
   const [scanProgress, setScanProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [skillErrors, setSkillErrors] = useState<Record<string, string>>({});
 
-  const experienceOptions = ['<1 año', '1 a 3 años', '4 a 6 años', '7 a 10 años', '+10 años'];
+  const experienceOptions = [
+    { value: '<1 año', label: '<1 año' },
+    { value: '1 a 3 años', label: '1 a 3 años' },
+    { value: '4 a 6 años', label: '4 a 6 años' },
+    { value: '7 a 10 años', label: '7 a 10 años' },
+    { value: '+10 años', label: '+10 años' },
+  ];
   const TOTAL_STEPS = 5;
 
   useEffect(() => {
@@ -73,7 +81,7 @@ export default function CandidateOnboarding() {
 
   const addSkillFromCatalog = (skill: SkillResponse) => {
     if (!skills.find((s) => s.skillId === skill.id)) {
-      setSkills([...skills, { name: skill.name, experience: '1 a 3 años', skillId: skill.id }]);
+      setSkills([...skills, { name: skill.name, experience: '', skillId: skill.id }]);
     }
     setSkillInput('');
     setSkillSearchResults([]);
@@ -104,6 +112,17 @@ export default function CandidateOnboarding() {
           await candidateApi.updateProfile({ headline: formData.headline });
         }
       } else if (step === 2) {
+        const errors: Record<string, string> = {};
+        for (const skill of skills) {
+          if (!skill.experience) {
+            errors[skill.name] = 'Seleccioná los años de experiencia';
+          }
+        }
+        if (Object.keys(errors).length > 0) {
+          setSkillErrors(errors);
+          setSaving(false);
+          return;
+        }
         for (const skill of skills) {
           if (skill.skillId) {
             const expRange = EXPERIENCE_MAP[skill.experience] || '1-3 years';
@@ -314,23 +333,22 @@ export default function CandidateOnboarding() {
                       <div key={skill.name} className="flex items-center justify-between py-3">
                         <span className="text-sm font-medium">{skill.name}</span>
                         <div className="flex items-center gap-3">
-                          <select
+                          <Select
                             value={skill.experience}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               setSkills(
                                 skills.map((s) =>
                                   s.name === skill.name ? { ...s, experience: e.target.value } : s
                                 )
-                              )
-                            }
-                            className="px-3 py-1.5 text-sm bg-[var(--sp-gray-light)] border border-transparent rounded-lg"
-                          >
-                            {experienceOptions.map((exp) => (
-                              <option key={exp} value={exp}>
-                                {exp}
-                              </option>
-                            ))}
-                          </select>
+                              );
+                              setSkillErrors((prev) => { const { [skill.name]: _, ...rest } = prev; return rest; });
+                            }}
+                            options={experienceOptions}
+                            placeholder="Ingrese sus años de experiencia"
+                            error={skillErrors[skill.name]}
+                            fullWidth={false}
+                            className="min-w-[220px]"
+                          />
                           <button
                             onClick={() => setSkills(skills.filter((s) => s.name !== skill.name))}
                             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"

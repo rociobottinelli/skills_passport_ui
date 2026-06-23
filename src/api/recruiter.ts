@@ -5,7 +5,7 @@ import type {
   JobOfferRequest,
   JobOfferResponse,
   JobOfferDetailResponse,
-} from '../types';
+} from '@/types';
 
 export async function createCompany(data: CompanyRequest): Promise<string> {
   const response = await apiClient.post<string>('/companies', data);

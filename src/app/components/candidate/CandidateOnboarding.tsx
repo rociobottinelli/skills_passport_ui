@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
 import { Upload, X, Shield, CheckCircle, Lock, Camera, ScanFace, Plus, Briefcase, FolderOpen } from 'lucide-react';
 import * as candidateApi from '../../../api/candidate';
 import * as skillsApi from '../../../api/skills';
-import type { SkillResponse, ExperienceRange } from '../../../types';
+import type { SkillResponse, ExperienceRange } from '@/types';
 
 const EXPERIENCE_MAP: Record<string, ExperienceRange> = {
   '<1 año': '<1 year',
@@ -271,7 +271,7 @@ export default function CandidateOnboarding() {
                   placeholder="Ej: React, Java, Product management..."
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={(e: React.KeyboardEvent) => {
+                  onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       addSkill();

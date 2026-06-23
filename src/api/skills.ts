@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { SkillResponse, CandidateSkillResponse, AddSkillRequest } from '../types';
+import type { SkillResponse, CandidateSkillResponse, AddSkillRequest } from '@/types';
 
 export async function searchSkills(query?: string): Promise<SkillResponse[]> {
   const response = await apiClient.get<SkillResponse[]>('/skills', {

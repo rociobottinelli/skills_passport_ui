@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext.tsx';
 
 export default function CandidateLogin() {
   const navigate = useNavigate();
@@ -57,7 +57,10 @@ export default function CandidateLogin() {
               Soy candidato
             </button>
             <button
-              onClick={() => setUserType('recruiter')}
+              onClick={() => {
+                setUserType('recruiter');
+                navigate('/recruiter/login');
+              }}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 userType === 'recruiter'
                   ? 'bg-white shadow-sm text-[var(--sp-gray-dark)]'

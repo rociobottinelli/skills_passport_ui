@@ -5,7 +5,7 @@ import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
 import { Filter, Heart, Lock, Unlock, Shield } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
-import type { RecruiterCandidateMatchResponse } from '../../../types';
+import type { RecruiterCandidateMatchResponse } from '@/types';
 
 const GRADIENT_STYLES = [
   { from: 'var(--sp-violet)', to: 'var(--sp-violet-dark)' },

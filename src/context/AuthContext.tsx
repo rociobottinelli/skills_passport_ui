@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { UserType } from '../types';
+import type { UserType } from '@/types';
 import * as authApi from '../api/auth';
 
 interface AuthState {

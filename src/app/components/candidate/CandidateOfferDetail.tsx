@@ -5,10 +5,10 @@ import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { MapPin, Briefcase, DollarSign, Heart, MessageSquare, Check, X } from 'lucide-react';
+import { Heart, MessageSquare, Check, X } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
 import * as messagesApi from '../../../api/messages';
-import type { MatchDetailResponse, ThreadCategory } from '../../../types';
+import type { MatchDetailResponse, ThreadCategory } from '@/types';
 
 const CATEGORY_MAP: Record<string, ThreadCategory> = {
   Sueldo: 'SALARY',

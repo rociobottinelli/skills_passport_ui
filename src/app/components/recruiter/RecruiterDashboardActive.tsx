@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
-import Badge from '../shared/Badge';
 import { Heart, MessageSquare, ArrowRight } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
-import type { JobOfferResponse } from '../../../types';
+import type { JobOfferResponse } from '@/types';
 
 export default function RecruiterDashboardActive() {
   const navigate = useNavigate();

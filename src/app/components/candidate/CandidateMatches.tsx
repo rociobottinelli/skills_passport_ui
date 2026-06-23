@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Card from '../shared/Card';
-import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { MapPin, Briefcase, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
-import type { CandidateMatchResponse } from '../../../types';
+import type { CandidateMatchResponse } from '@/types';
 
 const LOGO_STYLES = [
   { color: 'from-slate-100 to-slate-200', text: 'text-slate-700' },

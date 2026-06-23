@@ -4,7 +4,7 @@ import type {
   SendMessageRequest,
   AnonymousThreadResponse,
   AnonymousThreadDetailResponse,
-} from '../types';
+} from '@/types';
 
 export async function createThread(data: CreateThreadRequest): Promise<string> {
   const response = await apiClient.post<string>('/anonymous-threads', data);

@@ -27,6 +27,7 @@ import CandidateAnonymousResponse from './components/candidate/CandidateAnonymou
 import CandidateProfileRevealed from './components/candidate/CandidateProfileRevealed';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import FAQPage from './components/shared/FAQPage';
+import NotFound from './components/shared/NotFound';
 
 export default function App() {
   return (
@@ -66,6 +67,9 @@ export default function App() {
         <Route path="/candidate/anonymous/:id" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateAnonymousResponse /></ProtectedRoute>} />
         <Route path="/candidate/profile-revealed" element={<ProtectedRoute requiredRole="CANDIDATE"><CandidateProfileRevealed /></ProtectedRoute>} />
         <Route path="/candidate/faq" element={<ProtectedRoute requiredRole="CANDIDATE"><FAQPage type="candidate" /></ProtectedRoute>} />
+
+        {/* Catch-all */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

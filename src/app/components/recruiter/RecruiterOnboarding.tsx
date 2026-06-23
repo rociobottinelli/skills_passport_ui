@@ -4,7 +4,7 @@ import Button from '../shared/Button';
 import Input from '../shared/Input';
 import { Upload } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
-import type { Industry, CompanySize } from '../../../types';
+import type { Industry, CompanySize } from '@/types';
 
 const INDUSTRY_MAP: Record<string, Industry> = {
   tech: 'TECH',

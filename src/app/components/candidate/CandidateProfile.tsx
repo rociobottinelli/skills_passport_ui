@@ -643,23 +643,27 @@ export default function CandidateProfile() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Validaciones que diste</h3>
             <div className="divide-y divide-gray-100">
-              {[
-                { name: 'María García', skill: 'Java', date: 'Hace 2 días', initials: 'MG' },
-                { name: 'Diego Fernández', skill: 'Spring Boot', date: 'Hace 1 semana', initials: 'DF' },
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xs">
-                      {item.initials}
+              {givenValidations.length === 0 && (
+                <p className="text-sm text-[var(--sp-gray-medium)]">No diste validaciones todavía.</p>
+              )}
+              {givenValidations.map((item) => {
+                const initials = item.candidateName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                const dateStr = new Date(item.createdAt).toLocaleDateString('es-AR');
+                return (
+                  <div key={item.id} className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xs">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{item.candidateName}</p>
+                        <p className="text-xs text-[var(--sp-gray-medium)]">Validaste {item.skillName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-[var(--sp-gray-medium)]">Validaste {item.skill}</p>
-                    </div>
+                    <span className="text-xs text-[var(--sp-gray-medium)]">{dateStr}</span>
                   </div>
-                  <span className="text-xs text-[var(--sp-gray-medium)]">{item.date}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import { MessageSquare, CheckCircle } from 'lucide-react';
 import * as messagesApi from '../../../api/messages';
-import type { AnonymousThreadResponse } from '../../../types';
+import type { AnonymousThreadResponse } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   SALARY: 'Sueldo',

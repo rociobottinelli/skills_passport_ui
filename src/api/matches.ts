@@ -3,7 +3,7 @@ import type {
   CandidateMatchResponse,
   MatchDetailResponse,
   RecruiterCandidateMatchResponse,
-} from '../types';
+} from '@/types';
 
 export async function getCandidateMatches(): Promise<CandidateMatchResponse[]> {
   const response = await apiClient.get<CandidateMatchResponse[]>('/candidates/me/matches');

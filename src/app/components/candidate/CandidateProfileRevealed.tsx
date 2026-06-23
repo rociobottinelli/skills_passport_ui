@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
-import Badge from '../shared/Badge';
 import { CheckCircle, Mail, Phone, User, FileText } from 'lucide-react';
 
 export default function CandidateProfileRevealed() {

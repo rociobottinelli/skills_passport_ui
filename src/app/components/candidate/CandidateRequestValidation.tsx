@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
-import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import { TrendingUp, Award, ChevronRight } from 'lucide-react';
 import * as validationsApi from '../../../api/validations';
 import * as skillsApi from '../../../api/skills';
-import type { SuggestedValidator, CandidateSkillResponse } from '../../../types';
+import type { SuggestedValidator, CandidateSkillResponse } from '@/types';
 
 export default function CandidateRequestValidation() {
   const navigate = useNavigate();

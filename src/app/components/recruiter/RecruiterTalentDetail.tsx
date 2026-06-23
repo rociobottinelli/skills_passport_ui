@@ -8,7 +8,7 @@ import SkillLevelRow from '../shared/SkillLevelRow';
 import ValidatorModal, { ValidatorData } from '../shared/ValidatorModal';
 import { Briefcase, Shield, Mail, ChevronRight } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
-import type { RecruiterCandidateMatchResponse } from '../../../types';
+import type { RecruiterCandidateMatchResponse } from '@/types';
 
 const techSkills = [
   {

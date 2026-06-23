@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
@@ -8,7 +8,7 @@ import Card from '../shared/Card';
 import { X } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
 import * as skillsApi from '../../../api/skills';
-import type { Modality, Seniority, SkillResponse } from '../../../types';
+import type { Modality, Seniority, SkillResponse } from '@/types';
 
 const MODALITY_MAP: Record<string, Modality> = {
   remote: 'REMOTE',
@@ -187,7 +187,7 @@ export default function RecruiterCreateOffer() {
                     placeholder="Ej: React, Java, PostgreSQL..."
                     value={skillInput}
                     onChange={(e) => setSkillInput(e.target.value)}
-                    onKeyPress={(e: React.KeyboardEvent) => {
+                    onKeyDown={(e: React.KeyboardEvent) => {
                       if (e.key === 'Enter' && skillSearchResults.length > 0) {
                         e.preventDefault();
                         addSkillFromCatalog(skillSearchResults[0]);

@@ -1,11 +1,53 @@
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import { CheckCircle, Mail, Phone, User, FileText } from 'lucide-react';
+import * as candidateApi from '../../../api/candidate';
+import type { CandidateProfileResponse } from '@/types';
+
+interface RevealedState {
+  offerId?: string;
+  offerTitle?: string;
+  companyName?: string;
+}
 
 export default function CandidateProfileRevealed() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as RevealedState | null;
+
+  const offerTitle = state?.offerTitle || 'Oferta';
+  const companyName = state?.companyName || 'Empresa';
+
+  const [profile, setProfile] = useState<CandidateProfileResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    candidateApi.getProfile()
+      .then(setProfile)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+        <Sidebar type="candidate" />
+        <div className="flex-1 ml-64 p-8 flex items-center justify-center">
+          <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const companyInitials = companyName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
@@ -26,11 +68,11 @@ export default function CandidateProfileRevealed() {
           <Card className="mb-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center text-slate-700 font-bold text-2xl">
-                LX
+                {companyInitials}
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Senior Backend Engineer</h2>
-                <p className="text-[var(--sp-gray-medium)]">Lexus</p>
+                <h2 className="text-2xl font-bold">{offerTitle}</h2>
+                <p className="text-[var(--sp-gray-medium)]">{companyName}</p>
               </div>
             </div>
 
@@ -43,7 +85,7 @@ export default function CandidateProfileRevealed() {
                   </div>
                   <div>
                     <p className="text-sm text-[var(--sp-gray-medium)]">Nombre completo</p>
-                    <p className="font-medium">Sofía Martínez</p>
+                    <p className="font-medium">{profile?.fullName ?? '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -52,18 +94,20 @@ export default function CandidateProfileRevealed() {
                   </div>
                   <div>
                     <p className="text-sm text-[var(--sp-gray-medium)]">Email</p>
-                    <p className="font-medium">sofia.martinez@gmail.com</p>
+                    <p className="font-medium">{profile?.email ?? '—'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-[var(--sp-violet)]" />
+                {profile?.phone && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-[var(--sp-violet)]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-[var(--sp-gray-medium)]">Teléfono</p>
+                      <p className="font-medium">{profile.phone}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-[var(--sp-gray-medium)]">Teléfono</p>
-                    <p className="font-medium">+54 11 5555-0123</p>
-                  </div>
-                </div>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
                     <FileText className="w-5 h-5 text-[var(--sp-violet)]" />
@@ -87,7 +131,7 @@ export default function CandidateProfileRevealed() {
                 <div>
                   <p className="font-medium">El reclutador te contactará</p>
                   <p className="text-sm text-[var(--sp-gray-medium)]">
-                    Recibirás un email o llamada del equipo de Lexus
+                    Recibirás un email o llamada del equipo de {companyName}
                   </p>
                 </div>
               </div>

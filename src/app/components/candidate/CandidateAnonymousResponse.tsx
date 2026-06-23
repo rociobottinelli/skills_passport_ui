@@ -39,16 +39,21 @@ export default function CandidateAnonymousResponse() {
   const category = CATEGORY_LABELS[thread?.category || ''] || thread?.category || '';
 
   const handleRevealProfile = async () => {
+    const revealState = {
+      offerId: thread?.offerId,
+      offerTitle: thread?.offerTitle,
+      companyName: thread?.companyName,
+    };
     if (!thread?.offerId) {
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
       return;
     }
     setRevealing(true);
     try {
       await matchesApi.markInterest(thread.offerId);
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     } catch {
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     }
   };
 

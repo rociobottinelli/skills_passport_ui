@@ -71,11 +71,16 @@ export default function CandidateOfferDetail() {
 
   const handleInterest = async () => {
     if (!offerId) return;
+    const revealState = {
+      offerId,
+      offerTitle: matchDetail?.offerTitle,
+      companyName: matchDetail?.companyName,
+    };
     try {
       await matchesApi.markInterest(offerId);
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     } catch {
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     }
   };
 

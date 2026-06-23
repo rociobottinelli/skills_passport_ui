@@ -75,7 +75,7 @@ export default function CandidateLogin() {
             <Input
               label="Email"
               type="email"
-              placeholder="sofia.martinez@gmail.com"
+              placeholder="tu@email.com"
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}

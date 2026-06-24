@@ -5,10 +5,12 @@ import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { Heart, MessageSquare, Check, X } from 'lucide-react';
+import { Heart, MessageSquare, Check, X, MapPin } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
 import * as messagesApi from '../../../api/messages';
-import type { MatchDetailResponse, ThreadCategory } from '@/types';
+import * as recruiterApi from '../../../api/recruiter';
+import { getInitials, seniorityLabel, modalityLabel } from '../../../utils/mappings';
+import type { MatchDetailResponse, JobOfferDetailResponse, ThreadCategory } from '@/types';
 
 const CATEGORY_MAP: Record<string, ThreadCategory> = {
   Sueldo: 'SALARY',
@@ -26,15 +28,21 @@ export default function CandidateOfferDetail() {
   const [questionCategory, setQuestionCategory] = useState('');
   const [question, setQuestion] = useState('');
   const [matchDetail, setMatchDetail] = useState<MatchDetailResponse | null>(null);
+  const [offerDetail, setOfferDetail] = useState<JobOfferDetailResponse | null>(null);
   const [sending, setSending] = useState(false);
   const [markingInterest, setMarkingInterest] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(true);
 
   useEffect(() => {
     if (offerId) {
-      matchesApi.getMatchDetail(offerId)
-        .then(setMatchDetail)
-        .catch(() => {})
+      Promise.all([
+        matchesApi.getMatchDetail(offerId).catch(() => null),
+        recruiterApi.getOffer(offerId).catch(() => null),
+      ])
+        .then(([match, offer]) => {
+          if (match) setMatchDetail(match);
+          if (offer) setOfferDetail(offer);
+        })
         .finally(() => setLoadingDetail(false));
     } else {
       setLoadingDetail(false);
@@ -111,18 +119,35 @@ export default function CandidateOfferDetail() {
             <div className="flex justify-between items-start mb-6">
               <div className="flex gap-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-700 font-bold text-3xl">
-                  LX
+                  {getInitials(matchDetail?.companyName ?? '')}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">{matchDetail?.offerTitle || 'Senior Backend Engineer'}</h1>
-                  <p className="text-xl text-[var(--sp-gray-medium)] mb-3">{matchDetail?.companyName || 'Empresa'}</p>
-                  <div className="flex gap-2">
-                    <Badge variant="neutral">USD 4.500 - 6.000</Badge>
-                    <Badge variant="neutral">Senior</Badge>
+                  <h1 className="text-3xl font-bold mb-2">{matchDetail?.offerTitle ?? ''}</h1>
+                  <p className="text-xl text-[var(--sp-gray-medium)] mb-3">{matchDetail?.companyName ?? ''}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {offerDetail?.salaryMin != null && offerDetail?.salaryMax != null && (
+                      <Badge variant="neutral">
+                        USD {offerDetail.salaryMin.toLocaleString('es-AR')} - {offerDetail.salaryMax.toLocaleString('es-AR')}
+                      </Badge>
+                    )}
+                    {offerDetail?.seniority && (
+                      <Badge variant="neutral">{seniorityLabel(offerDetail.seniority)}</Badge>
+                    )}
+                    {offerDetail?.modality && (
+                      <Badge variant="neutral">{modalityLabel(offerDetail.modality)}</Badge>
+                    )}
+                    {offerDetail?.location && (
+                      <Badge variant="neutral">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {offerDetail.location}
+                        </span>
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
-              <MatchScore score={matchDetail?.matchScore ?? 94} size="lg" />
+              <MatchScore score={matchDetail?.matchScore ?? 0} size="lg" />
             </div>
 
             <div className="flex gap-3">
@@ -203,8 +228,14 @@ export default function CandidateOfferDetail() {
           <Card className="mb-6">
             <h3 className="text-2xl font-bold mb-4">Sobre la posición</h3>
             <p className="text-[var(--sp-gray-medium)]">
-              {matchDetail?.description || 'Sin descripción disponible.'}
+              {matchDetail?.description || offerDetail?.description || 'Sin descripción disponible.'}
             </p>
+            {offerDetail?.benefits && (
+              <div className="mt-6">
+                <h4 className="text-lg font-bold mb-2">Beneficios</h4>
+                <p className="text-[var(--sp-gray-medium)]">{offerDetail.benefits}</p>
+              </div>
+            )}
           </Card>
         </div>
       </div>

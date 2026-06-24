@@ -26,14 +26,13 @@ export default function RecruiterAnonymousInbox() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (offerId) {
-      messagesApi.getOfferThreads(offerId)
-        .then(setThreads)
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    const fetchThreads = offerId
+      ? messagesApi.getOfferThreads(offerId)
+      : messagesApi.getRecruiterThreads();
+    fetchThreads
+      .then(setThreads)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [offerId]);
 
   return (
@@ -67,7 +66,7 @@ export default function RecruiterAnonymousInbox() {
                 <Card
                   key={thread.id}
                   hover
-                  onClick={() => navigate(`/recruiter/anonymous/${thread.id}`, { state: { offerId } })}
+                  onClick={() => navigate(`/recruiter/anonymous/${thread.id}`, { state: { offerId: thread.offerId || offerId } })}
                 >
                   <div className="flex gap-6">
                     <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full flex items-center justify-center relative overflow-hidden">

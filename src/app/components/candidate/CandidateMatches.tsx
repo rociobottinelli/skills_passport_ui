@@ -4,7 +4,7 @@ import Sidebar from '../shared/Sidebar';
 import Card from '../shared/Card';
 import Select from '../shared/Select';
 import MatchScore from '../shared/MatchScore';
-import { Filter } from 'lucide-react';
+import { Filter, Heart } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
 import type { CandidateMatchResponse } from '@/types';
 
@@ -149,7 +149,15 @@ export default function CandidateMatches() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-xl font-bold mb-1">{offer.title}</h3>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold">{offer.title}</h3>
+                            {offer.status === 'INTERESTED' && (
+                              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                <Heart className="w-3 h-3 fill-current" />
+                                Interesado
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[var(--sp-gray-medium)] mb-2">{offer.company}</p>
                         </div>
                         <MatchScore score={offer.matchScore} size="md" />

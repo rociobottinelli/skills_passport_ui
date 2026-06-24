@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { SearchCheck } from 'lucide-react';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
 import { useAuth } from '@/context/AuthContext.tsx';
@@ -137,7 +138,7 @@ export default function RecruiterLanding() {
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--sp-violet)] to-cyan-800 items-center justify-center p-12">
         <div className="text-white max-w-lg">
           <div className="mb-8">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur rounded-2xl mb-6"></div>
+            <SearchCheck className="w-16 h-16 text-white/90 mb-6" strokeWidth={1.5} />
             <h2 className="text-4xl font-bold mb-4">El talento validado está a tu alcance</h2>
             <p className="text-xl text-white/80">
               Reducí el riesgo en tu contratación con perfiles cuyas habilidades fueron confirmadas por sus propios

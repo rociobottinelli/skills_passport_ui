@@ -251,6 +251,7 @@ export interface MatchDetailResponse {
 export interface RecruiterCandidateMatchResponse {
   matchId: string;
   candidateId: string;
+  offerId: string;
   matchScore: number;
   profileRevealed: boolean;
   candidateName: string | null;

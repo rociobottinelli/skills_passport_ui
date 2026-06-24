@@ -4,10 +4,10 @@ import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
-import { AlertCircle, EyeOff, Heart } from 'lucide-react';
+import { AlertCircle, CheckCircle, EyeOff, Heart } from 'lucide-react';
 import * as messagesApi from '../../../api/messages';
 import * as matchesApi from '../../../api/matches';
-import type { AnonymousThreadDetailResponse } from '@/types';
+import type { AnonymousThreadDetailResponse, MatchDetailResponse } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   SALARY: 'Sueldo',
@@ -22,13 +22,21 @@ export default function CandidateAnonymousResponse() {
   const navigate = useNavigate();
   const { id: threadId } = useParams<{ id: string }>();
   const [thread, setThread] = useState<AnonymousThreadDetailResponse | null>(null);
+  const [matchDetail, setMatchDetail] = useState<MatchDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [revealing, setRevealing] = useState(false);
 
   useEffect(() => {
     if (threadId) {
       messagesApi.getCandidateThread(threadId)
-        .then(setThread)
+        .then((t) => {
+          setThread(t);
+          if (t.offerId) {
+            matchesApi.getMatchDetail(t.offerId)
+              .then(setMatchDetail)
+              .catch(() => {});
+          }
+        })
         .catch(() => {})
         .finally(() => setLoading(false));
     }
@@ -39,21 +47,18 @@ export default function CandidateAnonymousResponse() {
   const category = CATEGORY_LABELS[thread?.category || ''] || thread?.category || '';
 
   const handleRevealProfile = async () => {
-    const revealState = {
-      offerId: thread?.offerId,
-      offerTitle: thread?.offerTitle,
-      companyName: thread?.companyName,
-    };
-    if (!thread?.offerId) {
-      navigate('/candidate/profile-revealed', { state: revealState });
-      return;
-    }
+    if (!thread?.offerId) return;
     setRevealing(true);
+    const revealState = {
+      offerId: thread.offerId,
+      offerTitle: thread.offerTitle,
+      companyName: thread.companyName,
+    };
     try {
       await matchesApi.markInterest(thread.offerId);
       navigate('/candidate/profile-revealed', { state: revealState });
     } catch {
-      navigate('/candidate/profile-revealed', { state: revealState });
+      setRevealing(false);
     }
   };
 
@@ -127,7 +132,19 @@ export default function CandidateAnonymousResponse() {
             )}
           </Card>
 
-          {recruiterMessage && (
+          {matchDetail?.status === 'INTERESTED' ? (
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+              <div className="flex gap-3">
+                <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold mb-2">Ya marcaste interés en esta posición</h3>
+                  <p className="text-sm text-[var(--sp-gray-medium)]">
+                    Tu perfil fue compartido con el reclutador. Podés ver los detalles en tu perfil revelado.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ) : recruiterMessage ? (
             <>
               <Card className="mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
                 <div className="flex gap-3">
@@ -162,7 +179,7 @@ export default function CandidateAnonymousResponse() {
                 </p>
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

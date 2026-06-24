@@ -23,6 +23,11 @@ export async function markDecline(offerId: string): Promise<void> {
   await apiClient.post(`/candidates/me/matches/${offerId}/decline`);
 }
 
+export async function getRecruiterCandidates(): Promise<RecruiterCandidateMatchResponse[]> {
+  const response = await apiClient.get<RecruiterCandidateMatchResponse[]>('/recruiters/me/candidates');
+  return response.data;
+}
+
 export async function getOfferCandidates(offerId: string): Promise<RecruiterCandidateMatchResponse[]> {
   const response = await apiClient.get<RecruiterCandidateMatchResponse[]>(`/offers/${offerId}/candidates`);
   return response.data;

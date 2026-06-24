@@ -26,14 +26,13 @@ export default function RecruiterTalentList() {
   const [showInterestedOnly, setShowInterestedOnly] = useState(false);
 
   useEffect(() => {
-    if (offerId) {
-      matchesApi.getOfferCandidates(offerId)
-        .then(setCandidates)
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    const fetchCandidates = offerId
+      ? matchesApi.getOfferCandidates(offerId)
+      : matchesApi.getRecruiterCandidates();
+    fetchCandidates
+      .then(setCandidates)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [offerId]);
 
   const filteredCandidates = showInterestedOnly
@@ -88,7 +87,7 @@ export default function RecruiterTalentList() {
                 return (
                   <div
                     key={candidate.matchId}
-                    onClick={() => navigate(`/recruiter/talent/${candidate.candidateId}`, { state: { offerId } })}
+                    onClick={() => navigate(`/recruiter/talent/${candidate.candidateId}`, { state: { offerId: candidate.offerId || offerId } })}
                     className="bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer hover:shadow-sm hover:border-gray-200 transition-all"
                     style={
                       candidate.profileRevealed

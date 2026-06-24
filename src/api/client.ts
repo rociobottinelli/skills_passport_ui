@@ -30,6 +30,10 @@ apiClient.interceptors.response.use(
       window.location.href = '/candidate/login';
     } else if (error.response?.status === 403) {
       toast.error('No tenés permisos para esta acción');
+    } else if (error.response?.status === 409) {
+      toast.error(error.response.data?.error || 'Acción ya realizada');
+    } else if (error.response?.status === 400) {
+      toast.error(error.response.data?.error || 'Datos inválidos');
     } else if (error.response?.status && error.response.status >= 500) {
       toast.error('Error del servidor. Intentá de nuevo más tarde.');
     }

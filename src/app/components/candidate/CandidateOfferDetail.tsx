@@ -27,10 +27,17 @@ export default function CandidateOfferDetail() {
   const [question, setQuestion] = useState('');
   const [matchDetail, setMatchDetail] = useState<MatchDetailResponse | null>(null);
   const [sending, setSending] = useState(false);
+  const [markingInterest, setMarkingInterest] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(true);
 
   useEffect(() => {
     if (offerId) {
-      matchesApi.getMatchDetail(offerId).then(setMatchDetail).catch(() => {});
+      matchesApi.getMatchDetail(offerId)
+        .then(setMatchDetail)
+        .catch(() => {})
+        .finally(() => setLoadingDetail(false));
+    } else {
+      setLoadingDetail(false);
     }
   }, [offerId]);
 
@@ -69,8 +76,11 @@ export default function CandidateOfferDetail() {
     }
   };
 
+  const alreadyInterested = matchDetail?.status === 'INTERESTED';
+
   const handleInterest = async () => {
-    if (!offerId) return;
+    if (!offerId || markingInterest || alreadyInterested) return;
+    setMarkingInterest(true);
     const revealState = {
       offerId,
       offerTitle: matchDetail?.offerTitle,
@@ -80,7 +90,7 @@ export default function CandidateOfferDetail() {
       await matchesApi.markInterest(offerId);
       navigate('/candidate/profile-revealed', { state: revealState });
     } catch {
-      navigate('/candidate/profile-revealed', { state: revealState });
+      setMarkingInterest(false);
     }
   };
 
@@ -116,10 +126,10 @@ export default function CandidateOfferDetail() {
             </div>
 
             <div className="flex gap-3">
-              <Button fullWidth onClick={handleInterest}>
+              <Button fullWidth onClick={handleInterest} disabled={loadingDetail || markingInterest || alreadyInterested}>
                 <div className="flex items-center justify-center gap-2">
                   <Heart className="w-5 h-5" />
-                  <span>Me interesa</span>
+                  <span>{alreadyInterested ? 'Ya marcaste interés' : markingInterest ? 'Enviando...' : 'Me interesa'}</span>
                 </div>
               </Button>
               <Button variant="secondary" fullWidth onClick={() => setShowAnonymousModal(true)}>

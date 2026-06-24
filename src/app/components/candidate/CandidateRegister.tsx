@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { ShieldCheck } from 'lucide-react';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
 import { useAuth } from '@/context/AuthContext.tsx';
@@ -146,7 +147,7 @@ export default function CandidateRegister() {
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--sp-violet)] to-indigo-700 items-center justify-center p-12">
         <div className="text-white max-w-lg">
           <div className="mb-8">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur rounded-2xl mb-6"></div>
+            <ShieldCheck className="w-16 h-16 text-white/90 mb-6" strokeWidth={1.5} />
             <h2 className="text-4xl font-bold mb-4">Tu experiencia, validada por quienes te conocen</h2>
             <p className="text-xl text-white/80">
               Construí un perfil profesional con habilidades confirmadas por colegas, líderes y compañeros

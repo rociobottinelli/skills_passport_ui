@@ -21,6 +21,11 @@ export async function getCandidateThread(id: string): Promise<AnonymousThreadDet
   return response.data;
 }
 
+export async function getRecruiterThreads(): Promise<AnonymousThreadResponse[]> {
+  const response = await apiClient.get<AnonymousThreadResponse[]>('/recruiters/me/anonymous-threads');
+  return response.data;
+}
+
 export async function getOfferThreads(offerId: string): Promise<AnonymousThreadResponse[]> {
   const response = await apiClient.get<AnonymousThreadResponse[]>(`/offers/${offerId}/anonymous-threads`);
   return response.data;

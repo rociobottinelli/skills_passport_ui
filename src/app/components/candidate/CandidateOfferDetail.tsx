@@ -9,7 +9,7 @@ import { Heart, MessageSquare, Check, X, MapPin } from 'lucide-react';
 import * as matchesApi from '../../../api/matches';
 import * as messagesApi from '../../../api/messages';
 import * as recruiterApi from '../../../api/recruiter';
-import { getInitials, seniorityLabel, modalityLabel } from '../../../utils/mappings';
+import { getInitials, seniorityLabel, modalityLabel } from '@/utils/mappings.ts';
 import type { MatchDetailResponse, JobOfferDetailResponse, ThreadCategory } from '@/types';
 
 const CATEGORY_MAP: Record<string, ThreadCategory> = {

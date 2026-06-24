@@ -6,7 +6,7 @@ import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
-import { modalityLabel, seniorityLabel } from '../../../utils/mappings';
+import { modalityLabel, seniorityLabel } from '@/utils/mappings.ts';
 import type { JobOfferDetailResponse } from '@/types';
 
 export default function RecruiterOfferPublished() {

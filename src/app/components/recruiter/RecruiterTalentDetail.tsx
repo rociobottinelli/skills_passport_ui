@@ -16,7 +16,7 @@ import {
   reputationGradient,
   formatPeriod,
   getInitials,
-} from '../../../utils/mappings';
+} from '@/utils/mappings.ts';
 
 export default function RecruiterTalentDetail() {
   const navigate = useNavigate();

@@ -495,8 +495,8 @@ When a candidate requests validation for a skill, the system suggests validators
 - `GET /candidates/me/matches/:offerId` — match detail with matching/missing skills breakdown
 - `POST /candidates/me/matches/:offerId/interest` — mark "Me interesa" (triggers profile reveal)
 - `POST /candidates/me/matches/:offerId/decline` — mark "No me interesa"
-- `GET /offers/:offerId/candidates` — list matched candidates for recruiter (with interest status)
-- `GET /offers/:offerId/candidates/:candidateId` — candidate detail (full if revealed, limited if not)
+- `GET /offers/:offerId/candidates` — list matched candidates for recruiter (with interest status), returns `RecruiterCandidateMatchResponse[]`
+- `GET /offers/:offerId/candidates/:candidateId` — candidate detail (full if revealed, limited if not), returns `RecruiterCandidateDetailResponse` — see §3.1
 
 ### Anonymous Messaging
 - `POST /anonymous-threads` — candidate creates anonymous thread (body: offerId, category, message)
@@ -520,6 +520,120 @@ When a candidate requests validation for a skill, the system suggests validators
 - `POST /candidates/me/projects` — add project
 - `PUT /candidates/me/projects/:id` — update
 - `DELETE /candidates/me/projects/:id` — remove
+
+---
+
+### 3.1 Enriched Candidate Detail for Recruiters
+
+**Endpoint:** `GET /offers/:offerId/candidates/:candidateId`
+
+**Auth:** Recruiter JWT (must own the offer).
+
+**Purpose:** Returns a single candidate's full or limited profile depending on whether the candidate has revealed their profile for this offer.
+
+#### Response type: `RecruiterCandidateDetailResponse`
+
+```json
+{
+  "matchId": "uuid",
+  "candidateId": "uuid",
+  "offerId": "uuid",
+  "matchScore": 87,
+  "profileRevealed": true,
+  "candidateName": "Juan Pérez",
+  "currentRole": "Senior Backend Engineer",
+  "location": "Buenos Aires, Argentina",
+  "identityVerified": true,
+  "skills": ["Java", "Spring Boot", "PostgreSQL"],
+  "email": "juan@email.com",
+  "linkedIn": "https://linkedin.com/in/juanperez",
+  "candidateSkills": [ ... ],
+  "validators": [ ... ],
+  "workExperience": [ ... ]
+}
+```
+
+#### Behavior by reveal status
+
+| Field | `profileRevealed = false` | `profileRevealed = true` |
+|-------|--------------------------|--------------------------|
+| `matchId`, `candidateId`, `offerId`, `matchScore` | ✅ populated | ✅ populated |
+| `identityVerified` | ✅ populated | ✅ populated |
+| `skills` (string array of names) | ✅ populated | ✅ populated |
+| `candidateName` | `null` | ✅ full name |
+| `currentRole`, `location` | `null` | ✅ populated |
+| `email`, `linkedIn` | `null` | ✅ populated |
+| `candidateSkills` | `[]` empty array | ✅ populated |
+| `validators` | `[]` empty array | ✅ populated |
+| `workExperience` | `[]` empty array | ✅ populated |
+
+#### Sub-schema: `CandidateSkillDetailResponse`
+
+One entry per candidate skill that has at least one completed validation (i.e., has a `consolidatedLevel`). Skills without validations are excluded.
+
+| Field | Type | Nullable | Description |
+|-------|------|----------|-------------|
+| `skillName` | string | no | Name from the Skill catalog (e.g., "Java") |
+| `skillType` | enum | no | `TECH` \| `SOFT` |
+| `consolidatedLevel` | enum | yes | `COLABORADOR` \| `EJECUTOR_AUTONOMO` \| `LIDER` \| `REFERENTE`. Null if no validations exist. |
+| `validationComment` | string | yes | The `comment` field from the **single highest-reputation validator** for this skill. If the top validator left no comment, null. |
+| `validatorName` | string | yes | Full name of the highest-reputation validator for this skill. |
+| `validatorCompany` | string | yes | Company name where the validator works (joined from the validator's most recent WorkExperience where `isCurrent = true`, or from their profile). |
+
+**Selection logic for `validationComment` / `validatorName` / `validatorCompany`:**
+
+```
+For each CandidateSkill:
+  1. Find all completed Validations for this (candidateId, skillId)
+  2. Join each Validation → ValidatorReputation (by validatorId)
+  3. Order by ValidatorReputation.reputationScore DESC
+  4. Pick the first row (highest reputation)
+  5. Use that Validation's comment, the validator's fullName, and the validator's current company
+```
+
+#### Sub-schema: `CandidateValidatorDetailResponse`
+
+One entry per unique **(validatorId, skillId)** pair — i.e., one entry per validation. A validator who validated two different skills for the same candidate produces two entries.
+
+| Field | Type | Nullable | Description |
+|-------|------|----------|-------------|
+| `name` | string | no | Validator's full name |
+| `role` | string | no | Validator's current role/position |
+| `company` | string | no | Validator's current company |
+| `reputationLevel` | enum | no | `BRONCE` \| `PLATA` \| `ORO` \| `PLATINO` |
+| `platformYears` | integer | no | Years since the validator registered on the platform |
+| `totalValidations` | integer | no | Total number of validations this validator has given |
+| `successRate` | integer | no | 0–100, percentage of validated candidates that were later hired |
+| `seniority` | string | no | Verified seniority title (e.g., "Tech Lead", "Engineering Manager") |
+| `companyPartner` | boolean | no | Whether the validator's company is a verified partner |
+| `identityVerified` | boolean | no | Whether the validator has passed RENAPER identity verification |
+| `validatedSkill` | string | no | Name of the skill this validator validated (e.g., "Java") |
+| `validatedLevel` | enum | no | `COLABORADOR` \| `EJECUTOR_AUTONOMO` \| `LIDER` \| `REFERENTE` — the level assigned by this validator |
+
+**Data source joins:**
+
+```
+Validation
+  → Candidate (validatorId → Candidate.id) → fullName, currentRole
+  → ValidatorReputation (validatorId → userId) → reputationLevel, platformYears, totalValidations, successRate, seniority, identityVerified
+  → Company (via Candidate's current WorkExperience or recruiter profile) → name, isPartner
+  → Skill (skillId) → name (for validatedSkill)
+  → Validation.assignedLevel (for validatedLevel)
+```
+
+#### Sub-schema: `WorkExperienceResponse`
+
+Reuses the existing `WorkExperienceResponse` type (see §1.10). No changes needed.
+
+| Field | Type | Nullable | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | no | PK |
+| `company` | string | no | Company name |
+| `position` | string | no | Job title |
+| `startDate` | string (date) | no | Start date (month precision) |
+| `endDate` | string (date) | yes | End date, null if currently working |
+| `isCurrent` | boolean | no | Whether this is the current position |
+| `description` | string | yes | Role description |
 
 ---
 

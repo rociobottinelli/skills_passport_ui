@@ -263,6 +263,50 @@ export interface RecruiterCandidateMatchResponse {
   linkedIn: string | null;
 }
 
+// --- Recruiter Candidate Detail (enriched, for single-candidate view) ---
+
+export interface CandidateSkillDetailResponse {
+  skillName: string;
+  skillType: SkillType;
+  consolidatedLevel: SkillLevel | null;
+  validationComment: string | null;
+  validatorName: string | null;
+  validatorCompany: string | null;
+}
+
+export interface CandidateValidatorDetailResponse {
+  name: string;
+  role: string;
+  company: string;
+  reputationLevel: ReputationLevel;
+  platformYears: number;
+  totalValidations: number;
+  successRate: number;
+  seniority: string;
+  companyPartner: boolean;
+  identityVerified: boolean;
+  validatedSkill: string;
+  validatedLevel: SkillLevel;
+}
+
+export interface RecruiterCandidateDetailResponse {
+  matchId: string;
+  candidateId: string;
+  offerId: string;
+  matchScore: number;
+  profileRevealed: boolean;
+  candidateName: string | null;
+  currentRole: string | null;
+  location: string | null;
+  identityVerified: boolean;
+  skills: string[];
+  email: string | null;
+  linkedIn: string | null;
+  candidateSkills: CandidateSkillDetailResponse[];
+  validators: CandidateValidatorDetailResponse[];
+  workExperience: WorkExperienceResponse[];
+}
+
 // --- Anonymous Messaging ---
 
 export interface CreateThreadRequest {

@@ -3,6 +3,7 @@ import type {
   CandidateMatchResponse,
   MatchDetailResponse,
   RecruiterCandidateMatchResponse,
+  RecruiterCandidateDetailResponse,
 } from '@/types';
 
 export async function getCandidateMatches(): Promise<CandidateMatchResponse[]> {
@@ -33,7 +34,7 @@ export async function getOfferCandidates(offerId: string): Promise<RecruiterCand
   return response.data;
 }
 
-export async function getOfferCandidate(offerId: string, candidateId: string): Promise<RecruiterCandidateMatchResponse> {
-  const response = await apiClient.get<RecruiterCandidateMatchResponse>(`/offers/${offerId}/candidates/${candidateId}`);
+export async function getOfferCandidate(offerId: string, candidateId: string): Promise<RecruiterCandidateDetailResponse> {
+  const response = await apiClient.get<RecruiterCandidateDetailResponse>(`/offers/${offerId}/candidates/${candidateId}`);
   return response.data;
 }

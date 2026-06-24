@@ -130,7 +130,7 @@ export default function RecruiterCreateOffer() {
           skills: skills.map((s) => ({ skillId: s.skillId, requirement: s.requirement })),
         });
         await recruiterApi.publishOffer(offerId);
-        navigate('/recruiter/offer-published', { state: { offerTitle: formData.title } });
+        navigate('/recruiter/offer-published', { state: { offerId, offerTitle: formData.title } });
       } catch {
         navigate('/recruiter/offer-published');
       } finally {

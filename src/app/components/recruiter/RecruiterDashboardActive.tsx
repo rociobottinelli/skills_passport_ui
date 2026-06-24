@@ -6,7 +6,7 @@ import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import { Briefcase, ArrowRight, Plus } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
-import type { JobOfferResponse } from '../../../types';
+import type { JobOfferResponse } from '@/types';
 
 const STATUS_LABELS: Record<string, string> = {
   PUBLISHED: 'Publicada',

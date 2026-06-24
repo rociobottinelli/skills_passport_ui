@@ -5,10 +5,10 @@ import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import MatchScore from '../shared/MatchScore';
-import { Briefcase, MapPin, Calendar, DollarSign, Heart, Lock, Unlock, Shield, Filter, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Briefcase, MapPin, Calendar, DollarSign, Heart, Lock, Unlock, Shield, MessageSquare, ArrowLeft } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
 import * as matchesApi from '../../../api/matches';
-import type { JobOfferDetailResponse, RecruiterCandidateMatchResponse } from '../../../types';
+import type { JobOfferDetailResponse, RecruiterCandidateMatchResponse } from '@/types';
 
 const MODALITY_LABELS: Record<string, string> = {
   REMOTE: 'Remoto',

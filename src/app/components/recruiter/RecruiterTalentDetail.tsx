@@ -77,7 +77,7 @@ export default function RecruiterTalentDetail() {
   // Derive validator modal data from API data
   const validators = useMemo(() =>
     (candidate?.validators ?? []).map((v) => {
-      const gradient = reputationGradient(v.reputationLevel);
+      const gradient = reputationGradient(v.reputationLevel) ?? { from: '#9CA3AF', to: '#6B7280' };
       return {
         name: v.name,
         initials: getInitials(v.name),

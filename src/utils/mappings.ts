@@ -41,20 +41,22 @@ const SENIORITY_LABELS: Record<Seniority, string> = {
   LEAD: 'Lead',
 };
 
+const DEFAULT_GRADIENT: { from: string; to: string } = { from: '#9CA3AF', to: '#6B7280' };
+
 export function skillLevelLabel(level: SkillLevel): SkillLevelDisplay {
-  return SKILL_LEVEL_LABELS[level];
+  return SKILL_LEVEL_LABELS[level] ?? 'Colaborador';
 }
 
 export function skillTypeLabel(type: SkillType): 'tech' | 'soft' {
-  return SKILL_TYPE_LABELS[type];
+  return SKILL_TYPE_LABELS[type] ?? 'tech';
 }
 
 export function reputationLabel(level: ReputationLevel): ReputationLevelDisplay {
-  return REPUTATION_LABELS[level];
+  return REPUTATION_LABELS[level] ?? 'Bronce';
 }
 
 export function reputationGradient(level: ReputationLevel): { from: string; to: string } {
-  return REPUTATION_GRADIENTS[level];
+  return REPUTATION_GRADIENTS[level] ?? DEFAULT_GRADIENT;
 }
 
 export function modalityLabel(modality: string): string {

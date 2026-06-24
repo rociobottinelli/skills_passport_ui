@@ -314,7 +314,7 @@ interface FAQPageProps {
 
 export default function FAQPage({ type }: FAQPageProps) {
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className={`flex min-h-screen bg-[var(--sp-gray-light)] ${type === 'recruiter' ? 'theme-recruiter' : ''}`}>
       <Sidebar type={type} />
 
       <div className="flex-1 ml-64 p-8">

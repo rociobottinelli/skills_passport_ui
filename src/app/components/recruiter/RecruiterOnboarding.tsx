@@ -55,7 +55,7 @@ export default function RecruiterOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex items-center justify-center p-8">
+    <div className="theme-recruiter min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex items-center justify-center p-8">
       <div className="max-w-2xl w-full">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
@@ -122,7 +122,7 @@ export default function RecruiterOnboarding() {
                       onClick={() => setFormData({ ...formData, companySize: size })}
                       className={`py-3 px-4 rounded-xl border-2 transition-all ${
                         formData.companySize === size
-                          ? 'border-[var(--sp-violet)] bg-[#E8E7FE]'
+                          ? 'border-[var(--sp-violet)] bg-[var(--sp-violet-light)]'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >

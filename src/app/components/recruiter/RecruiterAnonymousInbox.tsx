@@ -37,7 +37,7 @@ export default function RecruiterAnonymousInbox() {
   }, [offerId]);
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
@@ -70,7 +70,7 @@ export default function RecruiterAnonymousInbox() {
                   onClick={() => navigate(`/recruiter/anonymous/${thread.id}`, { state: { offerId } })}
                 >
                   <div className="flex gap-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full flex items-center justify-center relative overflow-hidden">
+                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
                       <MessageSquare className="w-8 h-8 text-white relative z-10" />
                     </div>

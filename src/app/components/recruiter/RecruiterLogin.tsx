@@ -26,7 +26,7 @@ export default function RecruiterLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex items-center justify-center p-8">
+    <div className="theme-recruiter min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex items-center justify-center p-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-[var(--sp-violet)] rounded-2xl flex items-center justify-center mx-auto mb-6">

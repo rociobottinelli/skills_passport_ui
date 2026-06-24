@@ -147,7 +147,7 @@ export default function RecruiterTalentDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+      <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
         <Sidebar type="recruiter" />
         <div className="flex-1 ml-64 p-8 flex items-center justify-center">
           <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
@@ -157,7 +157,7 @@ export default function RecruiterTalentDetail() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
@@ -301,7 +301,7 @@ export default function RecruiterTalentDetail() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span
                       className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: '#EEEDFE', color: '#3C3489' }}
+                      style={{ backgroundColor: 'var(--sp-violet-light)', color: 'var(--sp-violet-dark)' }}
                     >
                       {v.validatedSkill} · {v.validatedLevel}
                     </span>

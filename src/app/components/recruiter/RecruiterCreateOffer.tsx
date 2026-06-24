@@ -111,7 +111,7 @@ export default function RecruiterCreateOffer() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
@@ -246,7 +246,7 @@ export default function RecruiterCreateOffer() {
                         <button
                           key={skill.id}
                           onClick={() => addSkillFromCatalog(skill)}
-                          className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-[var(--sp-violet)] hover:bg-[#E8E7FE] transition-all"
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-[var(--sp-violet)] hover:bg-[var(--sp-violet-light)] transition-all"
                         >
                           + {skill.name}
                         </button>

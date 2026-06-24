@@ -31,7 +31,7 @@ export default function Sidebar({ type }: SidebarProps) {
   ];
 
   const navItems = type === 'recruiter' ? recruiterNav : candidateNav;
-  const brandColor = type === 'recruiter' ? 'bg-blue-100 text-blue-600' : 'bg-[#E8E7FE] text-[var(--sp-violet)]';
+  const brandColor = type === 'recruiter' ? 'bg-cyan-100 text-cyan-600' : 'bg-[#E8E7FE] text-[var(--sp-violet)]';
   const userTypeLabel = type === 'recruiter' ? 'Reclutador' : 'Candidato';
 
   return (

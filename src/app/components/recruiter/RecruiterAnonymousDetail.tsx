@@ -64,7 +64,7 @@ export default function RecruiterAnonymousDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+      <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
         <Sidebar type="recruiter" />
         <div className="flex-1 ml-64 p-8 flex items-center justify-center">
           <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
@@ -74,7 +74,7 @@ export default function RecruiterAnonymousDetail() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
@@ -99,7 +99,7 @@ export default function RecruiterAnonymousDetail() {
             <div className="col-span-2 space-y-6">
               <Card>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full flex items-center justify-center relative overflow-hidden">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
                     <MessageSquare className="w-8 h-8 text-white relative z-10" />
                   </div>
@@ -152,7 +152,7 @@ export default function RecruiterAnonymousDetail() {
                 )}
 
                 {recruiterMessage && (
-                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-6">
                     <p className="text-sm font-medium mb-2">Tu respuesta:</p>
                     <p className="text-[var(--sp-gray-dark)]">{recruiterMessage.content}</p>
                   </div>
@@ -161,7 +161,7 @@ export default function RecruiterAnonymousDetail() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-[var(--sp-violet)] to-indigo-600 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-br from-[var(--sp-violet)] to-cyan-800 rounded-2xl p-6 text-white">
                 <h4 className="font-bold mb-2">Consejo</h4>
                 <p className="text-sm text-white/90 mb-3">
                   Sé transparente y detallado en tu respuesta. Una buena respuesta puede motivar al

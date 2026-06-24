@@ -4,9 +4,23 @@ import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
-import { Heart, MessageSquare, ArrowRight } from 'lucide-react';
+import { Briefcase, ArrowRight, Plus } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
 import type { JobOfferResponse } from '../../../types';
+
+const STATUS_LABELS: Record<string, string> = {
+  PUBLISHED: 'Publicada',
+  DRAFT: 'Borrador',
+  CLOSED: 'Cerrada',
+  PAUSED: 'Pausada',
+};
+
+const STATUS_VARIANTS: Record<string, 'match' | 'primary' | 'neutral' | 'alert'> = {
+  PUBLISHED: 'match',
+  DRAFT: 'neutral',
+  CLOSED: 'alert',
+  PAUSED: 'neutral',
+};
 
 export default function RecruiterDashboardActive() {
   const navigate = useNavigate();
@@ -25,11 +39,9 @@ export default function RecruiterDashboardActive() {
       .finally(() => setLoading(false));
   }, [navigate]);
 
-  const activeOffer = offers.find((o) => o.status === 'PUBLISHED') || offers[0];
-
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+      <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
         <Sidebar type="recruiter" />
         <div className="flex-1 ml-64 p-8 flex items-center justify-center">
           <p className="text-[var(--sp-gray-medium)]">Cargando...</p>
@@ -39,74 +51,58 @@ export default function RecruiterDashboardActive() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">{activeOffer?.title || 'Dashboard'}</h1>
-            <p className="text-[var(--sp-gray-medium)]">
-              {activeOffer?.modality || ''} · {activeOffer?.location || ''} · {activeOffer?.createdAt ? `Publicada ${new Date(activeOffer.createdAt).toLocaleDateString('es-AR')}` : ''}
-            </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Mis búsquedas</h1>
+              <p className="text-[var(--sp-gray-medium)]">
+                {offers.length} {offers.length === 1 ? 'búsqueda activa' : 'búsquedas'}
+              </p>
+            </div>
+            <Button onClick={() => navigate('/recruiter/create-offer')}>
+              <div className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                <span>Nueva búsqueda</span>
+              </div>
+            </Button>
           </div>
 
-          <Card className="mb-6 border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Heart className="w-7 h-7 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-4xl font-bold mb-1">12</p>
-                  <p className="text-lg text-[var(--sp-gray-medium)]">Candidatos marcaron interés</p>
-                </div>
-              </div>
-            </div>
-            <p className="text-[var(--sp-gray-medium)] mb-4">
-              Estos candidatos ya compartieron su perfil completo y datos de contacto.
-            </p>
-            <Button onClick={() => navigate('/recruiter/talent', { state: { offerId: activeOffer?.id } })} fullWidth>
-              <div className="flex items-center justify-center gap-2">
-                <span>Ver candidatos interesados</span>
-                <ArrowRight className="w-5 h-5" />
-              </div>
-            </Button>
-          </Card>
-
-          <Card className="mb-6 border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <MessageSquare className="w-7 h-7 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-4xl font-bold mb-1">3</p>
-                  <p className="text-lg text-[var(--sp-gray-medium)]">Consultas anónimas</p>
-                </div>
-              </div>
-            </div>
-            <p className="text-[var(--sp-gray-medium)] mb-4">
-              Candidatos con preguntas sobre la posición. Responder aumenta las chances de que marquen interés.
-            </p>
-            <Button onClick={() => navigate('/recruiter/anonymous-inbox', { state: { offerId: activeOffer?.id } })} variant="secondary" fullWidth>
-              <div className="flex items-center justify-center gap-2">
-                <span>Responder consultas</span>
-                <ArrowRight className="w-5 h-5" />
-              </div>
-            </Button>
-          </Card>
-
-          <div className="text-center">
-            <p className="text-[var(--sp-gray-medium)]">
-              47 candidatos compatibles en total ·{' '}
-              <button
-                onClick={() => navigate('/recruiter/talent', { state: { offerId: activeOffer?.id } })}
-                className="text-[var(--sp-violet)] hover:underline"
+          <div className="space-y-4">
+            {offers.map((offer) => (
+              <Card
+                key={offer.id}
+                hover
+                onClick={() => navigate(`/recruiter/offer/${offer.id}`)}
               >
-                Ver todos
-              </button>
-            </p>
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 bg-[var(--sp-violet-light)] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-7 h-7 text-[var(--sp-violet)]" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-lg font-bold">{offer.title}</h3>
+                      <Badge
+                        variant={STATUS_VARIANTS[offer.status] || 'neutral'}
+                        size="sm"
+                      >
+                        {STATUS_LABELS[offer.status] || offer.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-[var(--sp-gray-medium)]">
+                      {offer.modality}{offer.seniority ? ` · ${offer.seniority}` : ''}{offer.location ? ` · ${offer.location}` : ''}
+                      {offer.createdAt ? ` · ${new Date(offer.createdAt).toLocaleDateString('es-AR')}` : ''}
+                    </p>
+                  </div>
+
+                  <ArrowRight className="w-5 h-5 text-[var(--sp-gray-medium)] flex-shrink-0" />
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </div>

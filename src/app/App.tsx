@@ -10,6 +10,7 @@ import RecruiterTalentList from './components/recruiter/RecruiterTalentList';
 import RecruiterTalentDetail from './components/recruiter/RecruiterTalentDetail';
 import RecruiterAnonymousInbox from './components/recruiter/RecruiterAnonymousInbox';
 import RecruiterAnonymousDetail from './components/recruiter/RecruiterAnonymousDetail';
+import RecruiterOfferDetail from './components/recruiter/RecruiterOfferDetail';
 import RecruiterProfileRevealed from './components/recruiter/RecruiterProfileRevealed';
 
 import CandidateRegister from './components/candidate/CandidateRegister';
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/recruiter/create-offer" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterCreateOffer /></ProtectedRoute>} />
         <Route path="/recruiter/offer-published" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterOfferPublished /></ProtectedRoute>} />
         <Route path="/recruiter/dashboard" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterDashboardActive /></ProtectedRoute>} />
+        <Route path="/recruiter/offer/:id" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterOfferDetail /></ProtectedRoute>} />
         <Route path="/recruiter/talent" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterTalentList /></ProtectedRoute>} />
         <Route path="/recruiter/talent/:id" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterTalentDetail /></ProtectedRoute>} />
         <Route path="/recruiter/anonymous-inbox" element={<ProtectedRoute requiredRole="RECRUITER"><RecruiterAnonymousInbox /></ProtectedRoute>} />

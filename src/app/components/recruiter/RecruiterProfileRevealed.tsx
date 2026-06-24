@@ -9,7 +9,7 @@ export default function RecruiterProfileRevealed() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen bg-[var(--sp-gray-light)]">
+    <div className="theme-recruiter flex min-h-screen bg-[var(--sp-gray-light)]">
       <Sidebar type="recruiter" />
 
       <div className="flex-1 ml-64 p-8">
@@ -44,7 +44,7 @@ export default function RecruiterProfileRevealed() {
               <h3 className="text-lg font-bold mb-4">Datos de contacto</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
                     <Mail className="w-5 h-5 text-[var(--sp-violet)]" />
                   </div>
                   <div>

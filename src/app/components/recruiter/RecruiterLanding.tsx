@@ -39,7 +39,7 @@ export default function RecruiterLanding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex">
+    <div className="theme-recruiter min-h-screen bg-gradient-to-br from-[#F8F9FB] to-white flex">
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full">
           <div className="mb-8">
@@ -134,7 +134,7 @@ export default function RecruiterLanding() {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--sp-violet)] to-indigo-700 items-center justify-center p-12">
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--sp-violet)] to-cyan-800 items-center justify-center p-12">
         <div className="text-white max-w-lg">
           <div className="mb-8">
             <div className="w-20 h-20 bg-white/10 backdrop-blur rounded-2xl mb-6"></div>

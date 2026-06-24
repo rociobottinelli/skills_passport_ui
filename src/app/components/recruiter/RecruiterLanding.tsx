@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext.tsx';
 
 export default function RecruiterLanding() {
   const navigate = useNavigate();

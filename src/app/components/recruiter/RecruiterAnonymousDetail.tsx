@@ -4,10 +4,9 @@ import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
-import MatchScore from '../shared/MatchScore';
 import { MessageSquare, EyeOff } from 'lucide-react';
 import * as messagesApi from '../../../api/messages';
-import type { AnonymousThreadDetailResponse } from '../../../types';
+import type { AnonymousThreadDetailResponse } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   SALARY: 'Sueldo',

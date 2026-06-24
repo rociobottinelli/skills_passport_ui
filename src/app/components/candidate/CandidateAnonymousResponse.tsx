@@ -4,10 +4,10 @@ import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
-import { AlertCircle, Eye, EyeOff, Heart } from 'lucide-react';
+import { AlertCircle, EyeOff, Heart } from 'lucide-react';
 import * as messagesApi from '../../../api/messages';
 import * as matchesApi from '../../../api/matches';
-import type { AnonymousThreadDetailResponse } from '../../../types';
+import type { AnonymousThreadDetailResponse } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   SALARY: 'Sueldo',
@@ -39,16 +39,21 @@ export default function CandidateAnonymousResponse() {
   const category = CATEGORY_LABELS[thread?.category || ''] || thread?.category || '';
 
   const handleRevealProfile = async () => {
+    const revealState = {
+      offerId: thread?.offerId,
+      offerTitle: thread?.offerTitle,
+      companyName: thread?.companyName,
+    };
     if (!thread?.offerId) {
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
       return;
     }
     setRevealing(true);
     try {
       await matchesApi.markInterest(thread.offerId);
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     } catch {
-      navigate('/candidate/profile-revealed');
+      navigate('/candidate/profile-revealed', { state: revealState });
     }
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
+import Select from '../shared/Select';
 import ProfileSkillRow from '../shared/ProfileSkillRow';
 import SkillDetailModal, { ValidationDetail } from '../shared/SkillDetailModal';
 import ValidatorModal, { ValidatorData } from '../shared/ValidatorModal';
@@ -258,7 +259,13 @@ const EXPERIENCE_MAP: Record<string, ExperienceRange> = {
   '+10 años': '10+ years',
 };
 
-const EXPERIENCE_OPTIONS = ['<1 año', '1 a 3 años', '4 a 6 años', '7 a 10 años', '+10 años'];
+const EXPERIENCE_OPTIONS = [
+  { value: '<1 año', label: '<1 año' },
+  { value: '1 a 3 años', label: '1 a 3 años' },
+  { value: '4 a 6 años', label: '4 a 6 años' },
+  { value: '7 a 10 años', label: '7 a 10 años' },
+  { value: '+10 años', label: '+10 años' },
+];
 
 function formatPeriod(startDate: string, endDate: string | null, isCurrent: boolean): string {
   const fmt = (d: string) => {
@@ -312,7 +319,8 @@ export default function CandidateProfile() {
   const [skillSearch, setSkillSearch] = useState('');
   const [skillSearchResults, setSkillSearchResults] = useState<SkillResponse[]>([]);
   const [pendingSkill, setPendingSkill] = useState<SkillResponse | null>(null);
-  const [pendingExp, setPendingExp] = useState('<1 año');
+  const [pendingExp, setPendingExp] = useState('');
+  const [expError, setExpError] = useState('');
   const [savingSkill, setSavingSkill] = useState(false);
 
   // Add experience state
@@ -346,6 +354,10 @@ export default function CandidateProfile() {
 
   const handleAddSkill = async () => {
     if (!pendingSkill) return;
+    if (!pendingExp) {
+      setExpError('Seleccioná los años de experiencia');
+      return;
+    }
     setSavingSkill(true);
     try {
       const expRange = EXPERIENCE_MAP[pendingExp] || '1-3 years';
@@ -353,6 +365,8 @@ export default function CandidateProfile() {
       const updated = await skillsApi.getCandidateSkills();
       setApiSkills(updated);
       setPendingSkill(null);
+      setPendingExp('');
+      setExpError('');
       setSkillSearch('');
       setShowAddSkill(false);
     } catch {}
@@ -643,23 +657,27 @@ export default function CandidateProfile() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Validaciones que diste</h3>
             <div className="divide-y divide-gray-100">
-              {[
-                { name: 'María García', skill: 'Java', date: 'Hace 2 días', initials: 'MG' },
-                { name: 'Diego Fernández', skill: 'Spring Boot', date: 'Hace 1 semana', initials: 'DF' },
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xs">
-                      {item.initials}
+              {givenValidations.length === 0 && (
+                <p className="text-sm text-[var(--sp-gray-medium)]">No diste validaciones todavía.</p>
+              )}
+              {givenValidations.map((item) => {
+                const initials = item.candidateName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                const dateStr = new Date(item.createdAt).toLocaleDateString('es-AR');
+                return (
+                  <div key={item.id} className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xs">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{item.candidateName}</p>
+                        <p className="text-xs text-[var(--sp-gray-medium)]">Validaste {item.skillName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-[var(--sp-gray-medium)]">Validaste {item.skill}</p>
-                    </div>
+                    <span className="text-xs text-[var(--sp-gray-medium)]">{dateStr}</span>
                   </div>
-                  <span className="text-xs text-[var(--sp-gray-medium)]">{item.date}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -730,16 +748,17 @@ export default function CandidateProfile() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-[var(--sp-gray-dark)] block mb-2">Experiencia</label>
-                    <select
+                    <Select
+                      label="Experiencia"
                       value={pendingExp}
-                      onChange={(e) => setPendingExp(e.target.value)}
-                      className="w-full px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] text-sm"
-                    >
-                      {EXPERIENCE_OPTIONS.map((exp) => (
-                        <option key={exp} value={exp}>{exp}</option>
-                      ))}
-                    </select>
+                      onChange={(e) => {
+                        setPendingExp(e.target.value);
+                        setExpError('');
+                      }}
+                      options={EXPERIENCE_OPTIONS}
+                      placeholder="Ingrese sus años de experiencia"
+                      error={expError}
+                    />
                   </div>
                   <Button onClick={handleAddSkill} fullWidth disabled={savingSkill}>
                     {savingSkill ? 'Guardando...' : 'Agregar habilidad'}

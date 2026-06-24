@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import Select from '../shared/Select';
 import { Upload } from 'lucide-react';
 import * as recruiterApi from '../../../api/recruiter';
-import type { Industry, CompanySize } from '../../../types';
+import type { Industry, CompanySize } from '@/types';
 
 const INDUSTRY_MAP: Record<string, Industry> = {
   tech: 'TECH',
@@ -22,6 +23,14 @@ const SIZE_MAP: Record<string, CompanySize> = {
   '1000+': '1000+',
 };
 
+const INDUSTRY_OPTIONS = [
+  { value: 'tech', label: 'Tecnología' },
+  { value: 'finance', label: 'Finanzas' },
+  { value: 'ecommerce', label: 'E-commerce' },
+  { value: 'consulting', label: 'Consultoría' },
+  { value: 'other', label: 'Otra' },
+];
+
 export default function RecruiterOnboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -32,8 +41,20 @@ export default function RecruiterOnboarding() {
     description: '',
   });
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleNext = async () => {
+    if (step === 2) {
+      const errors: Record<string, string> = {};
+      if (!formData.industry) {
+        errors.industry = 'Seleccioná una industria';
+      }
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        return;
+      }
+    }
+
     if (step < 3) {
       setStep(step + 1);
     } else {
@@ -97,21 +118,18 @@ export default function RecruiterOnboarding() {
           {step === 2 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Industria y tamaño</h2>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Industria</label>
-                <select
-                  value={formData.industry}
-                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)]"
-                >
-                  <option value="">Seleccioná una industria</option>
-                  <option value="tech">Tecnología</option>
-                  <option value="finance">Finanzas</option>
-                  <option value="ecommerce">E-commerce</option>
-                  <option value="consulting">Consultoría</option>
-                  <option value="other">Otra</option>
-                </select>
-              </div>
+              <Select
+                label="Industria"
+                placeholder="Seleccioná una industria"
+                value={formData.industry}
+                onChange={(e) => {
+                  setFormData({ ...formData, industry: e.target.value });
+                  setFieldErrors((prev) => { const { industry, ...rest } = prev; return rest; });
+                }}
+                options={INDUSTRY_OPTIONS}
+                error={fieldErrors.industry}
+                required
+              />
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium">Tamaño de la empresa</label>
                 <div className="grid grid-cols-2 gap-3">

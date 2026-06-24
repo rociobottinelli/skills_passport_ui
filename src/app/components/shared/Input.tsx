@@ -1,10 +1,12 @@
+import React from "react";
+
 interface InputProps {
   label?: string;
   type?: string;
   placeholder?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   required?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
@@ -17,7 +19,7 @@ export default function Input({
   placeholder,
   value,
   onChange,
-  onKeyPress,
+  onKeyDown,
   required = false,
   disabled = false,
   fullWidth = true,
@@ -36,7 +38,7 @@ export default function Input({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        onKeyPress={onKeyPress}
+        onKeyDown={onKeyDown}
         required={required}
         disabled={disabled}
         className={`px-4 py-3 bg-[var(--sp-gray-light)] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--sp-violet)] focus:border-transparent transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}

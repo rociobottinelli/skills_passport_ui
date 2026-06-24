@@ -8,7 +8,7 @@ import type {
   WorkExperienceResponse,
   ProjectRequest,
   ProjectResponse,
-} from '../types';
+} from '@/types';
 
 export async function getProfile(): Promise<CandidateProfileResponse> {
   const response = await apiClient.get<CandidateProfileResponse>('/candidates/me');

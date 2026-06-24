@@ -60,10 +60,13 @@ export interface LoginRequest {
 export interface CandidateProfileResponse {
   id: string;
   fullName: string;
+  email: string;
   location: string;
   currentRole: string;
   headline: string | null;
   profilePhoto: string | null;
+  phone: string | null;
+  linkedIn: string | null;
   identityVerified: boolean;
   profileCompletion: number;
 }

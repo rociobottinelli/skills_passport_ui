@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from 'react-router';
 import { Briefcase, Users, MessageSquare, User, Award, Mail, HelpCircle, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext.tsx';
+import React from "react";
 
 interface NavItem {
   label: string;
@@ -14,6 +16,7 @@ interface SidebarProps {
 export default function Sidebar({ type }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const recruiterNav: NavItem[] = [
     { label: 'Mis búsquedas', path: '/recruiter/dashboard', icon: <Briefcase className="w-5 h-5" /> },
@@ -71,8 +74,7 @@ export default function Sidebar({ type }: SidebarProps) {
       <div className="px-3 pb-6">
         <button
           onClick={() => {
-            localStorage.removeItem('sp_token');
-            localStorage.removeItem('sp_user_type');
+            logout();
             navigate('/candidate/login');
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--sp-gray-medium)] hover:bg-red-50 hover:text-red-600 transition-all"

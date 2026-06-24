@@ -5,7 +5,7 @@ import type {
   ValidationRequestPayload,
   SubmitValidationRequest,
   SuggestedValidator,
-} from '../types';
+} from '@/types';
 
 export async function getValidationsGiven(): Promise<ValidationResponse[]> {
   const response = await apiClient.get<ValidationResponse[]>('/candidates/me/validations/given');

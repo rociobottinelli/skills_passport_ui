@@ -4,9 +4,9 @@ import Sidebar from '../shared/Sidebar';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
-import { Clock, CheckCircle } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import * as validationsApi from '../../../api/validations';
-import type { ValidationRequestResponse } from '../../../types';
+import type { ValidationRequestResponse } from '@/types';
 
 export default function CandidateValidationsPending() {
   const navigate = useNavigate();

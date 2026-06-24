@@ -5,7 +5,7 @@ import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
 import * as validationsApi from '../../../api/validations';
-import type { RelationType } from '../../../types';
+import type { RelationType } from '@/types';
 
 const relations = [
   { id: 'none', label: 'Sin relación', description: 'No trabajamos juntos' },
